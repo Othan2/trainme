@@ -69,6 +69,10 @@ class CadenceTarget(IntensityTarget):
     upper_bound: float
     target_value_unit: Optional[str] = None
     
+    def __post_init__(self):
+        if self.lower_bound >= self.upper_bound:
+            raise ValueError(f"Lower bound ({self.lower_bound}) must be less than upper bound ({self.upper_bound})")
+    
     def to_target_dict(self) -> Dict[str, Any]:
         return {
             "workoutTargetTypeId": 3,
@@ -90,9 +94,14 @@ class HeartRateZoneTarget(IntensityTarget):
 
 @dataclass
 class PaceZoneTarget(IntensityTarget):
+    # TODO: figure out a better way to construct this - confusing that lower bound has to be higher than upper.
     lower_bound: float
     upper_bound: float
     target_value_unit: Optional[str] = None
+    
+    def __post_init__(self):
+        if self.lower_bound < self.upper_bound:
+            raise ValueError(f"Pace lower bound ({self.lower_bound}) must be greater than upper bound ({self.upper_bound}) - it is measured in meters per second")
     
     def to_target_dict(self) -> Dict[str, Any]:
         return {
