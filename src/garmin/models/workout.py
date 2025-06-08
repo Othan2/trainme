@@ -130,7 +130,16 @@ class PaceZoneTarget(IntensityTarget):
         }
 
     def __str__(self) -> str:
-        return f"Pace {self.upper_bound:.2f}-{self.lower_bound:.2f} m/s"
+        # Convert from m/s to min/mile (1 mile = 1609.344 meters)
+        upper_min_mile = (1609.344 / self.upper_bound) / 60
+        lower_min_mile = (1609.344 / self.lower_bound) / 60
+        
+        def format_pace(pace_min_mile):
+            mins = int(pace_min_mile)
+            secs = int((pace_min_mile - mins) * 60)
+            return f"{mins}:{secs:02d}"
+        
+        return f"Pace {format_pace(upper_min_mile)}-{format_pace(lower_min_mile)} min/mile"
 
 
 class StepType(Enum):
