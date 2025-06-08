@@ -45,6 +45,14 @@ class EndCondition:
         condition_dict["displayable"] = self.displayable
         return condition_dict
 
+    def __str__(self) -> str:
+        if self.condition_type == EndConditionType.TIME:
+            mins, secs = divmod(int(self.value), 60)
+            return f"{mins}:{secs:02d}"
+        elif self.condition_type == EndConditionType.DISTANCE:
+            return f"{self.value}m"
+        return f"{self.condition_type.value[0]}: {self.value}"
+
 
 class IntensityTarget(ABC):
     @abstractmethod
@@ -62,6 +70,9 @@ class NoTarget(IntensityTarget):
             "workoutTargetTypeKey": "no.target",
             "displayOrder": 1
         }
+
+    def __str__(self) -> str:
+        return "No target"
 
 @dataclass
 class CadenceTarget(IntensityTarget):
@@ -81,6 +92,9 @@ class CadenceTarget(IntensityTarget):
             "displayOrder": 3
         }
 
+    def __str__(self) -> str:
+        return f"Cadence {self.lower_bound}-{self.upper_bound} spm"
+
 @dataclass
 class HeartRateZoneTarget(IntensityTarget):
     # hr zone. could also do BPM range with bounds in future.
@@ -93,6 +107,9 @@ class HeartRateZoneTarget(IntensityTarget):
             "workoutTargetTypeKey": "heart.rate.zone",
             "displayOrder": 4
         }
+
+    def __str__(self) -> str:
+        return f"HR Zone {self.zone_number}"
 
 @dataclass
 class PaceZoneTarget(IntensityTarget):
@@ -111,6 +128,9 @@ class PaceZoneTarget(IntensityTarget):
             "workoutTargetTypeKey": "pace.zone",
             "displayOrder": 6
         }
+
+    def __str__(self) -> str:
+        return f"Pace {self.upper_bound:.2f}-{self.lower_bound:.2f} m/s"
 
 
 class StepType(Enum):
@@ -137,6 +157,9 @@ class WorkoutStep:
     step_type: StepType
     end_condition: EndCondition
     intensity: IntensityTarget
+
+    def __str__(self) -> str:
+        return f"{self.step_type.value[0].title()}: {self.end_condition} @ {self.intensity}"
     
     def to_dict(self) -> Dict[str, Any]:
         result = {
@@ -171,6 +194,10 @@ class WorkoutSegment:
     segment_order: int
     sport_type: SportType
     workout_steps: List[WorkoutStep]
+
+    def __str__(self) -> str:
+        steps_str = "\n    ".join(str(step) for step in self.workout_steps)
+        return f"  {self.sport_type.value[0].title()} Segment:\n    {steps_str}"
 
     def to_dict(self) -> Dict[str, Any]:
         workout_steps_dict = []

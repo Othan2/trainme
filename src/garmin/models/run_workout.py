@@ -15,6 +15,10 @@ class RunWorkout(Workout):
     workout_segments: List[WorkoutSegment]
     is_wheelchair: bool = False
 
+    def __str__(self) -> str:
+        segments_str = "\n".join(str(segment) for segment in self.workout_segments)
+        return f"{self.workout_name}:\n{segments_str}"
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "sportType": SportType.RUNNING.to_dict(),
