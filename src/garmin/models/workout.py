@@ -128,7 +128,7 @@ class WorkoutStep:
 class WorkoutSegment:
     segment_order: int
     sport_type: SportType
-    workout_steps: List[WorkoutStep] = field(default_factory=list)
+    workout_steps: List[WorkoutStep]
 
     def to_dict(self) -> Dict[str, Any]:
         workout_steps_dict = []
