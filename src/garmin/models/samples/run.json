@@ -1,0 +1,322 @@
+{
+    "sportType": {
+        "sportTypeId": 1,
+        "sportTypeKey": "running",
+        "displayOrder": 1
+    },
+    "subSportType": null,
+    "workoutName": "Run Workout",
+    "estimatedDistanceUnit": {
+        "unitKey": null
+    },
+    "workoutSegments": [
+        {
+            "segmentOrder": 1,
+            "sportType": {
+                "sportTypeId": 1,
+                "sportTypeKey": "running",
+                "displayOrder": 1
+            },
+            "workoutSteps": [
+                {
+                    "stepId": 1,
+                    "stepOrder": 1,
+                    "stepType": {
+                        "stepTypeId": 1,
+                        "stepTypeKey": "warmup",
+                        "displayOrder": 1
+                    },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 1,
+                        "conditionTypeKey": "lap.button",
+                        "displayOrder": 1,
+                        "displayable": true
+                    },
+                    "endConditionValue": 1609.344,
+                    "targetType": {
+                        "workoutTargetTypeId": 1,
+                        "workoutTargetTypeKey": "no.target",
+                        "displayOrder": 1
+                    }
+                },
+                {
+                    "stepId": 2,
+                    "stepOrder": 2,
+                    "stepType": {
+                        "stepTypeId": 3,
+                        "stepTypeKey": "interval",
+                        "displayOrder": 3
+                    },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 3,
+                        "conditionTypeKey": "distance",
+                        "displayOrder": 3,
+                        "displayable": true
+                    },
+                    "endConditionValue": 1609.344,
+                    "targetType": {
+                        "workoutTargetTypeId": 1,
+                        "workoutTargetTypeKey": "no.target",
+                        "displayOrder": 1
+                    }
+                },
+                {
+                    "stepId": 4,
+                    "stepOrder": 3,
+                    "stepType": {
+                        "stepTypeId": 3,
+                        "stepTypeKey": "interval",
+                        "displayOrder": 3
+                    },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 2,
+                        "conditionTypeKey": "time",
+                        "displayOrder": 2,
+                        "displayable": true
+                    },
+                    "endConditionValue": 1609.344,
+                    "preferredEndConditionUnit": null,
+                    "endConditionCompare": null,
+                    "targetType": {
+                        "workoutTargetTypeId": 6,
+                        "workoutTargetTypeKey": "pace.zone",
+                        "displayOrder": 6
+                    },
+                    "targetValueOne": 3.155576495832706,
+                    "targetValueTwo": 2.8234105489029475,
+                    "targetValueUnit": null,
+                    "stepAudioNote": null
+                },
+                {
+                    "stepId": 5,
+                    "stepOrder": 4,
+                    "stepType": {
+                        "stepTypeId": 3,
+                        "stepTypeKey": "interval",
+                        "displayOrder": 3
+                    },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 2,
+                        "conditionTypeKey": "time",
+                        "displayOrder": 2,
+                        "displayable": true
+                    },
+                    "endConditionValue": 1609.344,
+                    "preferredEndConditionUnit": null,
+                    "endConditionCompare": null,
+                    "targetType": {
+                        "workoutTargetTypeId": 3,
+                        "workoutTargetTypeKey": "cadence",
+                        "displayOrder": 3
+                    },
+                    "targetValueOne": 175,
+                    "targetValueTwo": 185,
+                    "targetValueUnit": null,
+                    "stepAudioNote": null
+                },
+                {
+                    "stepId": 6,
+                    "stepOrder": 5,
+                    "stepType": {
+                        "stepTypeId": 3,
+                        "stepTypeKey": "interval",
+                        "displayOrder": 3
+                    },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 2,
+                        "conditionTypeKey": "time",
+                        "displayOrder": 2,
+                        "displayable": true
+                    },
+                    "endConditionValue": 1609,
+                    "preferredEndConditionUnit": null,
+                    "targetType": {
+                        "workoutTargetTypeId": 4,
+                        "workoutTargetTypeKey": "heart.rate.zone",
+                        "displayOrder": 4
+                    },
+                    "zoneNumber": 3,
+                    "targetValueUnit": null,
+                    "stepAudioNote": null
+                },
+                {
+                    "stepId": 7,
+                    "stepOrder": 6,
+                    "stepType": {
+                        "stepTypeId": 3,
+                        "stepTypeKey": "interval",
+                        "displayOrder": 3
+                    },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 2,
+                        "conditionTypeKey": "time",
+                        "displayOrder": 2,
+                        "displayable": true
+                    },
+                    "endConditionValue": 1609.344,
+                    "preferredEndConditionUnit": null,
+                    "endConditionCompare": null,
+                    "targetType": {
+                        "workoutTargetTypeId": 4,
+                        "workoutTargetTypeKey": "heart.rate.zone",
+                        "displayOrder": 4
+                    },
+                    "targetValueOne": 120,
+                    "targetValueTwo": 130,
+                    "targetValueUnit": null,
+                    "stepAudioNote": null
+                },
+                {
+                    "stepId": 8,
+                    "stepOrder": 7,
+                    "stepType": {
+                        "stepTypeId": 1,
+                        "stepTypeKey": "warmup",
+                        "displayOrder": 1
+                    },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 4,
+                        "conditionTypeKey": "calories",
+                        "displayOrder": 4,
+                        "displayable": true
+                    },
+                    "endConditionValue": 100,
+                    "preferredEndConditionUnit": null,
+                    "stepAudioNote": null,
+                    "targetType": {
+                        "workoutTargetTypeId": 1,
+                        "workoutTargetTypeKey": "no.target",
+                        "displayOrder": 1
+                    }
+                },
+                {
+                    "stepId": 9,
+                    "stepOrder": 8,
+                    "stepType": {
+                        "stepTypeId": 4,
+                        "stepTypeKey": "recovery",
+                        "displayOrder": 4
+                    },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 3,
+                        "conditionTypeKey": "distance",
+                        "displayOrder": 3,
+                        "displayable": true
+                    },
+                    "endConditionValue": 1609.344,
+                    "stepAudioNote": null,
+                    "targetType": {
+                        "workoutTargetTypeId": 1,
+                        "workoutTargetTypeKey": "no.target",
+                        "displayOrder": 1
+                    }
+                },
+                {
+                    "stepId": 10,
+                    "stepOrder": 9,
+                    "stepType": {
+                        "stepTypeId": 5,
+                        "stepTypeKey": "rest",
+                        "displayOrder": 5
+                    },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 3,
+                        "conditionTypeKey": "distance",
+                        "displayOrder": 3,
+                        "displayable": true
+                    },
+                    "endConditionValue": 1609.344,
+                    "stepAudioNote": null,
+                    "targetType": {
+                        "workoutTargetTypeId": 1,
+                        "workoutTargetTypeKey": "no.target",
+                        "displayOrder": 1
+                    }
+                },
+                {
+                    "stepId": 11,
+                    "stepOrder": 10,
+                    "stepType": {
+                        "stepTypeId": 2,
+                        "stepTypeKey": "cooldown",
+                        "displayOrder": 2
+                    },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 3,
+                        "conditionTypeKey": "distance",
+                        "displayOrder": 3,
+                        "displayable": true
+                    },
+                    "endConditionValue": 1609.344,
+                    "stepAudioNote": null,
+                    "targetType": {
+                        "workoutTargetTypeId": 1,
+                        "workoutTargetTypeKey": "no.target",
+                        "displayOrder": 1
+                    }
+                },
+                {
+                    "stepId": 3,
+                    "stepOrder": 11,
+                    "stepType": {
+                        "stepTypeId": 7,
+                        "stepTypeKey": "other",
+                        "displayOrder": 7
+                    },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 4,
+                        "conditionTypeKey": "calories",
+                        "displayOrder": 4,
+                        "displayable": true
+                    },
+                    "endConditionValue": 100,
+                    "stepAudioNote": null,
+                    "preferredEndConditionUnit": null,
+                    "targetType": {
+                        "workoutTargetTypeId": 1,
+                        "workoutTargetTypeKey": "no.target",
+                        "displayOrder": 1
+                    }
+                },
+                {
+                    "stepId": 12,
+                    "stepOrder": 12,
+                    "stepType": {
+                        "stepTypeId": 3,
+                        "stepTypeKey": "interval",
+                        "displayOrder": 3
+                    },
+                    "type": "ExecutableStepDTO",
+                    "endCondition": {
+                        "conditionTypeId": 3,
+                        "conditionTypeKey": "distance",
+                        "displayOrder": 3,
+                        "displayable": true
+                    },
+                    "endConditionValue": 1609.344,
+                    "targetType": {
+                        "workoutTargetTypeId": 1,
+                        "workoutTargetTypeKey": "no.target",
+                        "displayOrder": 1
+                    }
+                }
+            ]
+        }
+    ],
+    "avgTrainingSpeed": 3.025322718176075,
+    "estimatedDurationInSecs": 0,
+    "estimatedDistanceInMeters": 0,
+    "estimateType": null,
+    "isWheelchair": false
+}
