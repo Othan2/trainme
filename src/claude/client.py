@@ -96,7 +96,7 @@ class Claude:
         for content in response.content:
             if hasattr(content, 'type') and content.type == 'text':
                 chat_response = self._extract_text(content)
-            elif hasattr(content, 'type') and content.type == 'tool_use':
+            elif hasattr(content, 'type') and content.type == 'tool_use' and hasattr(content, 'input') and isinstance(content.input, dict) and "workouts" in content.input:
                 for workout_data in content.input["workouts"]:  # type: ignore
                     workouts.append(self._construct_run_workout(workout_data))
                 
