@@ -27,7 +27,7 @@ def main():
             step_order=2,
             step_type=StepType.INTERVAL,
             end_condition=EndCondition(EndConditionType.DISTANCE, 5000.0),  # 5km
-            intensity=PaceZoneTarget(lower_bound=2.5, upper_bound=3.6)  # pace in meters per second
+            intensity=PaceZoneTarget(lower_bound=3.6, upper_bound=2.5)  # pace in meters per second
         )
         
         cooldown_step = WorkoutStep(

@@ -65,6 +65,7 @@ class NoTarget(IntensityTarget):
 
 @dataclass
 class CadenceTarget(IntensityTarget):
+    # steps per minute
     lower_bound: float
     upper_bound: float
     target_value_unit: Optional[str] = None
@@ -82,6 +83,7 @@ class CadenceTarget(IntensityTarget):
 
 @dataclass
 class HeartRateZoneTarget(IntensityTarget):
+    # hr zone. could also do BPM range with bounds in future.
     zone_number: int
     target_value_unit: Optional[str] = None
     
@@ -135,26 +137,23 @@ class WorkoutStep:
     step_type: StepType
     end_condition: EndCondition
     intensity: IntensityTarget
-    type: str = "ExecutableStepDTO"
-    preferred_end_condition_unit: Optional[str] = None
-    end_condition_compare: Optional[str] = None
-    step_audio_note: Optional[str] = None
-
+    
     def to_dict(self) -> Dict[str, Any]:
         result = {
             "stepOrder": self.step_order,
             "stepType": self.step_type.to_dict(),
-            "type": self.type,
+            "type": "ExecutableStepDTO",
             "endCondition": self.end_condition.to_dict(),
             "endConditionValue": self.end_condition.value,
             "targetType": self.intensity.to_target_dict()
         }
         
-        # Only include non-default values
-        if self.preferred_end_condition_unit is not None:
-            result["preferredEndConditionUnit"] = self.preferred_end_condition_unit
-        if self.end_condition_compare is not None:
-            result["endConditionCompare"] = self.end_condition_compare
+        # Not sure if these ever need to be set...
+        result["preferredEndConditionUnit"] = None
+        result["endConditionCompare"] = None
+        result["stepAudioNote"] = None
+        
+        # intensity
         if hasattr(self.intensity, 'lower_bound') and getattr(self.intensity, 'lower_bound', None) is not None:
             result["targetValueOne"] = getattr(self.intensity, 'lower_bound')
         if hasattr(self.intensity, 'upper_bound') and getattr(self.intensity, 'upper_bound', None) is not None:
@@ -163,8 +162,6 @@ class WorkoutStep:
             result["targetValueUnit"] = getattr(self.intensity, 'target_value_unit')
         if hasattr(self.intensity, 'zone_number') and getattr(self.intensity, 'zone_number', None) is not None:
             result["zoneNumber"] = getattr(self.intensity, 'zone_number')
-        if self.step_audio_note is not None:
-            result["stepAudioNote"] = self.step_audio_note
             
         return result
 
