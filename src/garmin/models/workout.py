@@ -46,19 +46,59 @@ class EndCondition:
         return condition_dict
 
 
-class TargetType(Enum):
-    NO_TARGET = ("no.target", 1, 1)
-    CADENCE = ("cadence", 3, 3)
-    HEART_RATE_ZONE = ("heart.rate.zone", 4, 4)
-    PACE_ZONE = ("pace.zone", 6, 6)
+class IntensityTarget(ABC):
+    @abstractmethod
+    def to_target_dict(self) -> Dict[str, Any]:
+        """Return the target type dictionary for API calls"""
+        pass
 
-    def to_dict(self) -> Dict[str, Any]:
-        key, target_id, display_order = self.value
-        
+@dataclass 
+class NoTarget(IntensityTarget):
+    target_value_unit: Optional[str] = None
+    
+    def to_target_dict(self) -> Dict[str, Any]:
         return {
-            "workoutTargetTypeId": target_id,
-            "workoutTargetTypeKey": key,
-            "displayOrder": display_order
+            "workoutTargetTypeId": 1,
+            "workoutTargetTypeKey": "no.target",
+            "displayOrder": 1
+        }
+
+@dataclass
+class CadenceTarget(IntensityTarget):
+    lower_bound: float
+    upper_bound: float
+    target_value_unit: Optional[str] = None
+    
+    def to_target_dict(self) -> Dict[str, Any]:
+        return {
+            "workoutTargetTypeId": 3,
+            "workoutTargetTypeKey": "cadence", 
+            "displayOrder": 3
+        }
+
+@dataclass
+class HeartRateZoneTarget(IntensityTarget):
+    zone_number: int
+    target_value_unit: Optional[str] = None
+    
+    def to_target_dict(self) -> Dict[str, Any]:
+        return {
+            "workoutTargetTypeId": 4,
+            "workoutTargetTypeKey": "heart.rate.zone",
+            "displayOrder": 4
+        }
+
+@dataclass
+class PaceZoneTarget(IntensityTarget):
+    lower_bound: float
+    upper_bound: float
+    target_value_unit: Optional[str] = None
+    
+    def to_target_dict(self) -> Dict[str, Any]:
+        return {
+            "workoutTargetTypeId": 6,
+            "workoutTargetTypeKey": "pace.zone",
+            "displayOrder": 6
         }
 
 
@@ -85,14 +125,10 @@ class WorkoutStep:
     step_order: int
     step_type: StepType
     end_condition: EndCondition
-    target_type: TargetType
+    intensity: IntensityTarget
     type: str = "ExecutableStepDTO"
     preferred_end_condition_unit: Optional[str] = None
     end_condition_compare: Optional[str] = None
-    target_value_one: Optional[float] = None
-    target_value_two: Optional[float] = None
-    target_value_unit: Optional[str] = None
-    zone_number: Optional[int] = None
     step_audio_note: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
@@ -102,7 +138,7 @@ class WorkoutStep:
             "type": self.type,
             "endCondition": self.end_condition.to_dict(),
             "endConditionValue": self.end_condition.value,
-            "targetType": self.target_type.to_dict()
+            "targetType": self.intensity.to_target_dict()
         }
         
         # Only include non-default values
@@ -110,14 +146,14 @@ class WorkoutStep:
             result["preferredEndConditionUnit"] = self.preferred_end_condition_unit
         if self.end_condition_compare is not None:
             result["endConditionCompare"] = self.end_condition_compare
-        if self.target_value_one is not None:
-            result["targetValueOne"] = self.target_value_one
-        if self.target_value_two is not None:
-            result["targetValueTwo"] = self.target_value_two
-        if self.target_value_unit is not None:
-            result["targetValueUnit"] = self.target_value_unit
-        if self.zone_number is not None:
-            result["zoneNumber"] = self.zone_number
+        if hasattr(self.intensity, 'lower_bound') and getattr(self.intensity, 'lower_bound', None) is not None:
+            result["targetValueOne"] = getattr(self.intensity, 'lower_bound')
+        if hasattr(self.intensity, 'upper_bound') and getattr(self.intensity, 'upper_bound', None) is not None:
+            result["targetValueTwo"] = getattr(self.intensity, 'upper_bound')
+        if hasattr(self.intensity, 'target_value_unit') and getattr(self.intensity, 'target_value_unit', None) is not None:
+            result["targetValueUnit"] = getattr(self.intensity, 'target_value_unit')
+        if hasattr(self.intensity, 'zone_number') and getattr(self.intensity, 'zone_number', None) is not None:
+            result["zoneNumber"] = getattr(self.intensity, 'zone_number')
         if self.step_audio_note is not None:
             result["stepAudioNote"] = self.step_audio_note
             

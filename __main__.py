@@ -2,7 +2,7 @@ from src.garmin.client import Garmin
 from src.garmin.models.run_workout import RunWorkout
 from src.garmin.models.workout import (
     WorkoutSegment, WorkoutStep, SportType, StepType, 
-    EndCondition, EndConditionType, TargetType
+    EndCondition, EndConditionType, NoTarget, PaceZoneTarget
 )
 from getpass import getpass
 
@@ -20,22 +20,21 @@ def main():
             step_order=1,
             step_type=StepType.WARMUP,
             end_condition=EndCondition(EndConditionType.TIME, 600.0),  # 10 minutes
-            target_type=TargetType.NO_TARGET
+            intensity=NoTarget()
         )
         
         main_step = WorkoutStep(
             step_order=2,
             step_type=StepType.INTERVAL,
             end_condition=EndCondition(EndConditionType.DISTANCE, 5000.0),  # 5km
-            target_type=TargetType.PACE_ZONE,
-            zone_number=2
+            intensity=PaceZoneTarget(lower_bound=2.5, upper_bound=3.6)  # pace in meters per second
         )
         
         cooldown_step = WorkoutStep(
             step_order=3,
             step_type=StepType.COOLDOWN,
             end_condition=EndCondition(EndConditionType.TIME, 300.0),  # 5 minutes
-            target_type=TargetType.NO_TARGET
+            intensity=NoTarget()
         )
         
         # Create workout segment
