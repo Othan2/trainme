@@ -32,46 +32,58 @@ class Claude:
         )
         return self._extract_text(message.content[0])
     
-    def chat(self, message: str) -> tuple[str, RunWorkout | None]:
+    def chat(self, message: str) -> tuple[str, List[RunWorkout] | None]:
         """Chat interface with Claude that can also create workouts."""
         tools = [{
-            "name": "create_workout",
-            "description": "Create a structured running workout with warmup, intervals, and cooldown",
+            "name": "create_workouts",
+            "description": "Create one or more structured running workouts with warmup, intervals, and cooldown",
             "input_schema": {
                 "type": "object",
                 "properties": {
-                    "workout_name": {"type": "string", "description": "Name of the workout"},
-                    "steps": {
+                    "workouts": {
                         "type": "array",
                         "items": {
                             "type": "object",
                             "properties": {
-                                "step_type": {
-                                    "type": "string",
-                                    "enum": ["warmup", "interval", "recovery", "cooldown", "rest"],
-                                    "description": "Type of workout step. Interval is the main work step."
-                                },
-                                "duration_minutes": {"type": "number", "description": "Duration in minutes"},
-                                "target_type": {
-                                    "type": "string", 
-                                    "enum": ["no_target", "heart_rate_zone", "cadence_range", "pace_range"],
-                                    "description": "Type of intensity target"
-                                },
-                                "zone_number": {"type": "integer", "description": "HR zone number (1-5) if target_type is heart_rate_zone"},
-                                "target_lower_bound": {"type": "number", "description": "Lower bound for cadence/pace ranges. For pace ranges, measured in MPH."},
-                                "target_upper_bound": {"type": "number", "description": "Upper bound for cadence/pace ranges. For pace ranges, measured in MPH."}
+                                "workout_name": {"type": "string", "description": "Name of the workout"},
+                                "steps": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "step_type": {
+                                                "type": "string",
+                                                "enum": ["warmup", "interval", "recovery", "cooldown", "rest"],
+                                                "description": "Type of workout step. Interval is the main work step."
+                                            },
+                                            "duration_minutes": {"type": "number", "description": "Duration in minutes"},
+                                            "target_type": {
+                                                "type": "string", 
+                                                "enum": ["no_target", "heart_rate_zone", "cadence_range", "pace_range"],
+                                                "description": "Type of intensity target"
+                                            },
+                                            "zone_number": {"type": "integer", "description": "HR zone number (1-5) if target_type is heart_rate_zone"},
+                                            "target_lower_bound": {"type": "number", "description": "Lower bound for cadence/pace ranges. For pace ranges, measured in MPH."},
+                                            "target_upper_bound": {"type": "number", "description": "Upper bound for cadence/pace ranges. For pace ranges, measured in MPH."}
+                                        },
+                                        "required": ["step_type", "duration_minutes", "target_type"]
+                                    }
+                                }
                             },
-                            "required": ["step_type", "duration_minutes", "target_type"]
+                            "required": ["workout_name", "steps"]
                         }
                     }
                 },
-                "required": ["workout_name", "steps"]
+                "required": ["workouts"]
             }
         }]
+        
+        system_message = "Always use the create_workouts tool to structure workouts rather than just describing them in text. Include all requested workouts in a single tool call."
         
         response = self.client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=1000,
+            system=system_message,
             tools=tools,  # type: ignore
             messages=[
                 {"role": "user", "content": message}
@@ -79,15 +91,16 @@ class Claude:
         )
         
         chat_response = ""
-        workout = None
+        workouts = []
         
         for content in response.content:
             if hasattr(content, 'type') and content.type == 'text':
                 chat_response = self._extract_text(content)
             elif hasattr(content, 'type') and content.type == 'tool_use':
-                workout = self._construct_run_workout(content.input)  # type: ignore
+                for workout_data in content.input["workouts"]:  # type: ignore
+                    workouts.append(self._construct_run_workout(workout_data))
                 
-        return chat_response, workout
+        return chat_response, workouts
     
     def _construct_run_workout(self, tool_output: Dict[str, Any]) -> RunWorkout:
         """Convert tool input to RunWorkout object."""
