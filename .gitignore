@@ -1,0 +1,16 @@
+# Project specific
+cookies.txt
+
+# Python
+__pycache__/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+# IDEs
+.vscode/
+*.swp
+*.swo
+*~
