@@ -9,6 +9,8 @@ from typing import Any, Dict, List, Optional
 import garth
 from .fit import FitEncoderWeight
 
+from .models.workout import Workout
+
 logger = logging.getLogger(__name__)
 
 
@@ -1404,13 +1406,14 @@ class Garmin:
 
         return self.download(url)
 
-    # def upload_workout(self, workout_json: str):
-    #     """Upload workout using json data."""
+    def upload_workout(self, workout: Workout):
+        """Upload workout using json data."""
 
-    #     url = f"{self.garmin_workouts}/workout"
-    #     logger.debug("Uploading workout using %s", url)
+        url = f"{self.garmin_workouts}/workout"
+        logger.debug("Uploading workout using %s", url)
 
-    #     return self.garth.post("connectapi", url, json=workout_json, api=True)
+        return self.garth.post("connectapi", url, json=workout.to_dict(), api=True)
+    
     def get_menstrual_data_for_date(self, fordate: str):
         """Return menstrual data for date."""
 
