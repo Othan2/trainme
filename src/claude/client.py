@@ -32,19 +32,8 @@ class Claude:
         )
         return self._extract_text(message.content[0])
     
-    def chat(self, message: str) -> str:
-        """Simple chat interface with Claude."""
-        response = self.client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=1000,
-            messages=[
-                {"role": "user", "content": message}
-            ]
-        )
-        return self._extract_text(response.content[0])
-    
-    def create_run_workout(self, workout_name: str, description: str = "") -> RunWorkout:
-        """Create a structured RunWorkout with tool calling."""
+    def chat(self, message: str) -> tuple[str, RunWorkout | None]:
+        """Chat interface with Claude that can also create workouts."""
         tools = [{
             "name": "create_workout",
             "description": "Create a structured running workout with warmup, intervals, and cooldown",
@@ -69,8 +58,8 @@ class Claude:
                                     "description": "Type of intensity target"
                                 },
                                 "zone_number": {"type": "integer", "description": "HR zone number (1-5) if target_type is heart_rate_zone"},
-                                "lower_bound": {"type": "number", "description": "Lower bound for cadence/pace ranges"},
-                                "upper_bound": {"type": "number", "description": "Upper bound for cadence/pace ranges"}
+                                "target_lower_bound": {"type": "number", "description": "Lower bound for cadence/pace ranges. For pace ranges, measured in MPH."},
+                                "target_upper_bound": {"type": "number", "description": "Upper bound for cadence/pace ranges. For pace ranges, measured in MPH."}
                             },
                             "required": ["step_type", "duration_minutes", "target_type"]
                         }
@@ -80,30 +69,25 @@ class Claude:
             }
         }]
         
-        prompt = f"""Create a running workout named '{workout_name}'. {description}
-
-Please structure a workout with appropriate warmup, main workout sections, and cooldown. Use the create_workout tool to define each step.
-
-For target types:
-- no_target: Easy running
-- heart_rate_zone: Use zone 1-5 (1=recovery, 2=aerobic, 3=tempo, 4=threshold, 5=VO2max)  
-- cadence_range: Steps per minute (e.g., 160-180)
-- pace_range: For pace zones, lower_bound should be SLOWER, upper_bound FASTER as it is measured in meters per second."""
-
         response = self.client.messages.create(
             model="claude-3-5-sonnet-20241022",
-            max_tokens=1500,
+            max_tokens=1000,
             tools=tools,  # type: ignore
-            messages=[{"role": "user", "content": prompt}]
+            messages=[
+                {"role": "user", "content": message}
+            ]
         )
         
-        # Find the tool use in the response
+        chat_response = ""
+        workout = None
+        
         for content in response.content:
-            if hasattr(content, 'type') and content.type == 'tool_use':
-                return self._construct_run_workout(content.input)  # type: ignore
+            if hasattr(content, 'type') and content.type == 'text':
+                chat_response = self._extract_text(content)
+            elif hasattr(content, 'type') and content.type == 'tool_use':
+                workout = self._construct_run_workout(content.input)  # type: ignore
                 
-        # Fallback if no tool use found
-        raise ValueError("Failed to create structured workout")
+        return chat_response, workout
     
     def _construct_run_workout(self, tool_output: Dict[str, Any]) -> RunWorkout:
         """Convert tool input to RunWorkout object."""
@@ -117,13 +101,17 @@ For target types:
                 intensity = HeartRateZoneTarget(zone_number=step_data["zone_number"])
             elif step_data["target_type"] == "cadence_range":
                 intensity = CadenceTarget(
-                    lower_bound=step_data["lower_bound"],
-                    upper_bound=step_data["upper_bound"]
+                    lower_bound=step_data["target_lower_bound"],
+                    upper_bound=step_data["target_upper_bound"]
                 )
             elif step_data["target_type"] == "pace_range":
+                # Convert MPH to meters per second: MPH * 0.44704
+                lower_bound_ms = step_data["target_lower_bound"] * 0.44704
+                upper_bound_ms = step_data["target_upper_bound"] * 0.44704
                 intensity = PaceZoneTarget(
-                    lower_bound=step_data["lower_bound"],
-                    upper_bound=step_data["upper_bound"]
+                    # invert bounds as pace range is in meters per second in garmin
+                    upper_bound=lower_bound_ms,
+                    lower_bound=upper_bound_ms
                 )
             else:
                 intensity = NoTarget()
