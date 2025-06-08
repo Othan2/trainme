@@ -48,8 +48,8 @@ class Claude:
                             "properties": {
                                 "step_type": {
                                     "type": "string",
-                                    "enum": ["warmup", "interval", "recovery", "cooldown", "rest", "other"],
-                                    "description": "Type of workout step"
+                                    "enum": ["warmup", "interval", "recovery", "cooldown", "rest"],
+                                    "description": "Type of workout step. Interval is the main work step."
                                 },
                                 "duration_minutes": {"type": "number", "description": "Duration in minutes"},
                                 "target_type": {
