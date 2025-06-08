@@ -34,8 +34,11 @@ def main():
             continue
             
         print("\nGenerating workout with Claude...")
-        response = claude.chat(user_input)
+        response, workout = claude.chat(user_input)
         print(f"Claude: {response}")
+        
+        if workout:
+            print(workout)
         
         # TODO: Parse Claude's response into a workout and upload to Garmin
         
