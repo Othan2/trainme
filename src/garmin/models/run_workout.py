@@ -14,28 +14,23 @@ from .workout import (
 
 @dataclass
 class RunWorkout(Workout):
-    sport_type: SportType
     workout_name: str
     # Workout segments could be multiple types of activity, not just running. May want to allow that
     workout_segments: List[WorkoutSegment] = field(default_factory=list)
-    sub_sport_type: Optional[Any] = None
-    estimated_distance_unit: EstimatedDistanceUnit = field(default_factory=EstimatedDistanceUnit)
-    avg_training_speed: float = 0.0
-    estimate_type: Optional[str] = None
     is_wheelchair: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "sportType": self.sport_type.to_dict(),
-            "subSportType": self.sub_sport_type,
+            "sportType": SportType(sport_type_id=1, sport_type_key="running", display_order=1).to_dict(),
+            "subSportType": None,
             "workoutName": self.workout_name,
-            "estimatedDistanceUnit": self.estimated_distance_unit.to_dict(),
+            "estimatedDistanceUnit": EstimatedDistanceUnit().to_dict(),
             "workoutSegments": [segment.to_dict() for segment in self.workout_segments],
-            "avgTrainingSpeed": self.avg_training_speed,
+            "avgTrainingSpeed": 0.0,
             # Left as zero in Garmin API request
             "estimatedDurationInSecs": 0,
             # Left as zero in Garmin API request
             "estimatedDistanceInMeters": 0,
-            "estimateType": self.estimate_type,
+            "estimateType": None,
             "isWheelchair": self.is_wheelchair
         }
