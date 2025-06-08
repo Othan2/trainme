@@ -27,9 +27,7 @@ class RunWorkout(Workout):
             "estimatedDistanceUnit": EstimatedDistanceUnit().to_dict(),
             "workoutSegments": [segment.to_dict() for segment in self.workout_segments],
             "avgTrainingSpeed": 0.0,
-            # Left as zero in Garmin API request
             "estimatedDurationInSecs": 0,
-            # Left as zero in Garmin API request
             "estimatedDistanceInMeters": 0,
             "estimateType": None,
             "isWheelchair": self.is_wheelchair
