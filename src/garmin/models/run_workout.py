@@ -21,7 +21,7 @@ class RunWorkout(Workout):
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "sportType": SportType(sport_type_id=1, sport_type_key="running", display_order=1).to_dict(),
+            "sportType": SportType.RUNNING.to_dict(),
             "subSportType": None,
             "workoutName": self.workout_name,
             "estimatedDistanceUnit": EstimatedDistanceUnit().to_dict(),
