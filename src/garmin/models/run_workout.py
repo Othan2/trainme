@@ -5,10 +5,6 @@ from .workout import (
     SportType, 
     WorkoutSegment, 
     EstimatedDistanceUnit,
-    EndCondition,
-    TargetType,
-    WorkoutStep,
-    StepType
 )
 
 
