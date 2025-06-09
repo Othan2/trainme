@@ -33,6 +33,7 @@ def main():
         print(f"Claude: {response}")
         
         if workouts and len(workouts) > 0:
+            print("\nWorkout Details:")
             for workout in workouts:
                 print(workout)
         

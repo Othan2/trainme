@@ -200,13 +200,11 @@ class Claude:
     
     def chat_complete(self, message: str) -> tuple[str, List[RunWorkout] | None]:
         """Chat with auto-continuation until Claude finishes the complete response."""
-        all_responses = []
         all_workouts = []
         
         current_input = message
         while True:
             response, workouts = self.chat(current_input)
-            all_responses.append(response)
             
             if workouts:
                 all_workouts.extend(workouts)
@@ -216,4 +214,11 @@ class Claude:
             else:
                 break
         
-        return "\n".join(all_responses), all_workouts if all_workouts else None
+        # Return summary of workouts created instead of garbled conversation
+        if all_workouts:
+            summary = f"Created {len(all_workouts)} workouts:\n"
+            for i, workout in enumerate(all_workouts, 1):
+                summary += f"{i}. {workout.workout_name}\n"
+            return summary.strip(), all_workouts
+        else:
+            return "No workouts were created.", None
