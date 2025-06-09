@@ -25,7 +25,12 @@ class Claude:
         """Chat interface with Claude that can create workouts."""
         tools = [{
             "name": "create_workouts",
-            "description": "Create one or more structured running workouts with warmup, intervals, and cooldown",
+            "description": 
+                """
+                Create one or more structured running workouts with warmup, intervals, and cooldown.
+                Workouts with higher intensities (e.g. zone 4 or 5 heart rate) should start with a 1 mile warmup and cooldown.
+                Steady runs and long runs should be a single interval throughout.
+                """,
             "input_schema": {
                 "type": "object",
                 "properties": {
