@@ -20,6 +20,7 @@ from ..garmin.models.workout import (
 class Claude:
     def __init__(self, api_key: str):
         self.client = anthropic.Anthropic(api_key=api_key)
+        self.conversation_history = []
     
     def chat(self, message: str) -> tuple[str, List[RunWorkout] | None]:
         """Chat interface with Claude that can create workouts."""
@@ -72,27 +73,46 @@ class Claude:
             }
         }]
         
-        system_message = "Always use the create_workouts tool to structure workouts rather than just describing them in text. Include all requested workouts in a single tool call."
+        system_message = "Use the create_workouts tool to structure workouts rather than just describing them in text. You can create workouts in multiple responses if needed."
+        
+        # Add user message to history
+        self.conversation_history.append({"role": "user", "content": message})
         
         response = self.client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=1000,
             system=system_message,
             tools=tools,  # type: ignore
-            messages=[
-                {"role": "user", "content": message}
-            ]
+            messages=self.conversation_history
         )
         
         chat_response = ""
         workouts = []
         
+        tool_uses = []
+        
         for content in response.content:
             if hasattr(content, 'type') and content.type == 'text':
                 chat_response = self._extract_text(content)
-            elif hasattr(content, 'type') and content.type == 'tool_use' and hasattr(content, 'input') and isinstance(content.input, dict) and "workouts" in content.input:
-                for workout_data in content.input["workouts"]:  # type: ignore
-                    workouts.append(self._construct_run_workout(workout_data))
+            elif hasattr(content, 'type') and content.type == 'tool_use':
+                tool_uses.append(content)
+                if hasattr(content, 'input') and isinstance(content.input, dict) and "workouts" in content.input:
+                    for workout_data in content.input["workouts"]:  # type: ignore
+                        workouts.append(self._construct_run_workout(workout_data))
+        
+        # Add Claude's response to history
+        self.conversation_history.append({"role": "assistant", "content": response.content})
+        
+        # Add tool results if any tools were used
+        if tool_uses:
+            tool_results = []
+            for tool_use in tool_uses:
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": tool_use.id,
+                    "content": "Workouts created successfully"
+                })
+            self.conversation_history.append({"role": "user", "content": tool_results})
                 
         return chat_response, workouts
     
