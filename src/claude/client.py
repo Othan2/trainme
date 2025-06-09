@@ -86,6 +86,8 @@ class Claude:
             messages=self.conversation_history
         )
         
+        print(f"Claude stop_reason: {response.stop_reason}")
+        
         chat_response = ""
         workouts = []
         
@@ -172,3 +174,46 @@ class Claude:
         if isinstance(content_block, TextBlock):
             return content_block.text
         return str(content_block)
+    
+    def _should_continue_conversation(self, response: str) -> bool:
+        """Check if Claude's response indicates it wants to continue with more content."""
+        continuation_indicators = [
+            "I'll continue",
+            "I'll finish", 
+            "Let me continue",
+            "I'll provide",
+            "Next,",
+            "Week 1:",  # Start of multi-week plan
+            "continuing with",
+            "moving on to",
+            "Part 2",
+            "Part 3",
+        ]
+        
+        # Check for incomplete workout plans (mentions week 1 but not later weeks)
+        if "Week 1" in response and "Week 2" not in response and "Week 3" not in response:
+            return True
+        
+        # Check for continuation phrases
+        response_lower = response.lower()
+        return any(indicator.lower() in response_lower for indicator in continuation_indicators)
+    
+    def chat_complete(self, message: str) -> tuple[str, List[RunWorkout] | None]:
+        """Chat with auto-continuation until Claude finishes the complete response."""
+        all_responses = []
+        all_workouts = []
+        
+        current_input = message
+        while True:
+            response, workouts = self.chat(current_input)
+            all_responses.append(response)
+            
+            if workouts:
+                all_workouts.extend(workouts)
+            
+            if self._should_continue_conversation(response):
+                current_input = "continue"
+            else:
+                break
+        
+        return "\n".join(all_responses), all_workouts if all_workouts else None

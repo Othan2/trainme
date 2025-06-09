@@ -29,7 +29,7 @@ def main():
             continue
             
         print("\nGenerating workout with Claude...")
-        response, workouts = claude.chat(user_input)
+        response, workouts = claude.chat_complete(user_input)
         print(f"Claude: {response}")
         
         if workouts and len(workouts) > 0:
