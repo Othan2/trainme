@@ -113,7 +113,6 @@ class HeartRateZoneTarget(IntensityTarget):
 
 @dataclass
 class PaceZoneTarget(IntensityTarget):
-    # TODO: figure out a better way to construct this - confusing that lower bound has to be higher than upper.
     lower_bound: float
     upper_bound: float
     target_value_unit: Optional[str] = None
