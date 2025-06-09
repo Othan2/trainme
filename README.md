@@ -1,12 +1,29 @@
 # trainme (WIP)
 
+# trainme (WIP)
+
 Conversational running trainer that syncs back to garmin.
 
 ## quickstart
 
+### setup
+
 ```shell
-# python >= 3.11.5
+# requirespython >= 3.11.5
 pip install -r requirements.txt
+
+# setup env
+cp .env.example .env
+
+# add your information
+vim .env
+# or
+nano .env
+```
+
+### Run
+
+```shell
 python3 .
 ```
 
