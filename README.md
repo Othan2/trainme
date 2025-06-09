@@ -1,7 +1,5 @@
 # trainme (WIP)
 
-# trainme (WIP)
-
 Conversational running trainer that syncs back to garmin.
 
 ## quickstart
