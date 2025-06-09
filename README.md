@@ -7,7 +7,7 @@ Conversational running trainer that syncs back to garmin.
 ### setup
 
 ```shell
-# requirespython >= 3.11.5
+# requires python >= 3.11.5
 pip install -r requirements.txt
 
 # setup env
