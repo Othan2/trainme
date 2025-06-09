@@ -30,3 +30,7 @@ python3 .
 - Better feedback loop to claude to ensure it does what you ask (creates 5 week plan when not asked, not 3 week plan)
 - Confirmation of plan and upload activities to Garmin
 - Better plan generation - some of the workouts created do not look good
+
+## Acknowledgements
+
+- Ripped a lot of client code from <https://github.com/cyberjunky/python-garminconnect>
