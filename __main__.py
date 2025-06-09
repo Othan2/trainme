@@ -1,9 +1,4 @@
 from src.garmin.client import Garmin
-from src.garmin.models.run_workout import RunWorkout
-from src.garmin.models.workout import (
-    WorkoutSegment, WorkoutStep, SportType, StepType, 
-    EndCondition, EndConditionType, NoTarget, PaceZoneTarget
-)
 from src.claude.client import Claude
 import os
 from dotenv import load_dotenv
