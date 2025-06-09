@@ -21,19 +21,8 @@ class Claude:
     def __init__(self, api_key: str):
         self.client = anthropic.Anthropic(api_key=api_key)
     
-    def generate_workout(self, prompt: str) -> str:
-        """Generate a workout based on the given prompt."""
-        message = self.client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=1000,
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
-        return self._extract_text(message.content[0])
-    
     def chat(self, message: str) -> tuple[str, List[RunWorkout] | None]:
-        """Chat interface with Claude that can also create workouts."""
+        """Chat interface with Claude that can create workouts."""
         tools = [{
             "name": "create_workouts",
             "description": "Create one or more structured running workouts with warmup, intervals, and cooldown",
