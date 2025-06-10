@@ -40,7 +40,7 @@ class Claude:
                         "items": {
                             "type": "object",
                             "properties": {
-                                "workout_name": {"type": "string", "description": "Name of the workout"},
+                                "workout_name": {"type": "string", "description": "Name of the workout. Never include week information in the workout name, just a description of the workout."},
                                 "steps": {
                                     "type": "array",
                                     "items": {
@@ -73,48 +73,62 @@ class Claude:
             }
         }]
         
-        system_message = "Use the create_workouts tool to structure workouts rather than just describing them in text. You can create workouts in multiple responses if needed."
+        system_message = """
+        Use the create_workouts tool to structure workouts rather than just describing them in text.
+        You can create workouts in multiple responses if needed.
+        The user must specify number of runs per week and miles per week before you can use the create_workouts tool.
+        """
         
         # Add user message to history
         self.conversation_history.append({"role": "user", "content": message})
         
-        response = self.client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=1000,
-            system=system_message,
-            tools=tools,  # type: ignore
-            messages=self.conversation_history
-        )
-        
-        print(f"Claude stop_reason: {response.stop_reason}")
-        
         chat_response = ""
         workouts = []
         
-        tool_uses = []
-        
-        for content in response.content:
-            if hasattr(content, 'type') and content.type == 'text':
-                chat_response = self._extract_text(content)
-            elif hasattr(content, 'type') and content.type == 'tool_use':
-                tool_uses.append(content)
-                if hasattr(content, 'input') and isinstance(content.input, dict) and "workouts" in content.input:
-                    for workout_data in content.input["workouts"]:  # type: ignore
-                        workouts.append(self._construct_run_workout(workout_data))
-        
-        # Add Claude's response to history
-        self.conversation_history.append({"role": "assistant", "content": response.content})
-        
-        # Add tool results if any tools were used
-        if tool_uses:
-            tool_results = []
-            for tool_use in tool_uses:
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": tool_use.id,
-                    "content": "Workouts created successfully"
-                })
-            self.conversation_history.append({"role": "user", "content": tool_results})
+        while True:
+            response = self.client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=20000,
+                system=system_message,
+                tools=tools,  # type: ignore
+                messages=self.conversation_history
+            )
+            
+            print(f"Claude stop_reason: {response.stop_reason}")
+            
+            tool_uses = []
+            
+            current_use_workouts = []
+            for content in response.content:
+                if hasattr(content, 'type') and content.type == 'text':
+                    text_content = self._extract_text(content)
+                    chat_response += text_content
+                elif hasattr(content, 'type') and content.type == 'tool_use':
+                    tool_uses.append(content)
+                    if hasattr(content, 'input') and isinstance(content.input, dict) and "workouts" in content.input:
+                        for workout_data in content.input["workouts"]:  # type: ignore
+                            current_use_workouts.append(self._construct_run_workout(workout_data))
+            
+            # Add Claude's response to history
+            self.conversation_history.append({"role": "assistant", "content": response.content})
+            
+            # Add tool results if any tools were used
+            if tool_uses:
+                tool_results = []
+                for tool_use in tool_uses:
+                    tool_results.append({
+                        "type": "tool_result",
+                        "tool_use_id": tool_use.id,
+                        "content": str([str(w) + "\n" for w in current_use_workouts])
+                    })
+                self.conversation_history.append({"role": "user", "content": tool_results})
+            
+            workouts.extend(current_use_workouts)
+            
+            # Continue if stop reason is tool_use, otherwise break.
+            # Allows claude to generate a bunch of workouts at once.
+            if response.stop_reason != "tool_use":
+                break
                 
         return chat_response, workouts
     
@@ -201,10 +215,12 @@ class Claude:
     def chat_complete(self, message: str) -> tuple[str, List[RunWorkout] | None]:
         """Chat with auto-continuation until Claude finishes the complete response."""
         all_workouts = []
+        full_response = ""
         
         current_input = message
         while True:
             response, workouts = self.chat(current_input)
+            full_response += response + " "
             
             if workouts:
                 all_workouts.extend(workouts)
@@ -221,4 +237,4 @@ class Claude:
                 summary += f"{i}. {workout.workout_name}\n"
             return summary.strip(), all_workouts
         else:
-            return "No workouts were created.", None
+            return full_response.strip(), None
