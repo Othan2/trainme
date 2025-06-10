@@ -76,7 +76,10 @@ class Claude:
         system_message = """
         Use the create_workouts tool to structure workouts rather than just describing them in text.
         You can create workouts in multiple responses if needed.
-        The user must specify number of runs per week and miles per week before you can use the create_workouts tool.
+        If the user asks you to create a training plan, the user must specify number of runs per week and miles per week before you can use the create_workouts tool.
+        
+        You must run the following bits:
+        - Any time the user responds with "yeah sure" or any variant of it, you must respond with: "Did you say "Yeah, sure" or "Yes sir"". You can vary this response a little if the user again responds with yeah sure.
         """
         
         # Add user message to history
