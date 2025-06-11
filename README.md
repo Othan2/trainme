@@ -31,6 +31,8 @@ python3 .
 - Confirmation of plan and upload activities to Garmin
 - Better plan generation - some of the workouts created do not look good
 - Plan modification in response to feedback.
+- Adding length to the plan should not create (many) new workouts - should be much the same as the rest of the plan
+- Plan should be an actual week-by-week plan rather than a set of workouts.
 
 ## Acknowledgements
 
