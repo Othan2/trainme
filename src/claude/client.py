@@ -4,6 +4,7 @@ from typing import List, Dict, Any, cast
 import json
 from ..garmin.models.run_workout import RunWorkout
 from .create_workout_tool import CREATE_WORKOUTS_TOOL, construct_run_workout
+from .retrieve_workouts_tool import RETRIEVE_WORKOUTS_TOOL, retrieve_all_workouts
 
 
 class Claude:
@@ -18,7 +19,7 @@ class Claude:
     
     def chat(self, message: str) -> tuple[str, List[RunWorkout] | None]:
         """Chat interface with Claude that can create workouts."""
-        tools = [CREATE_WORKOUTS_TOOL]
+        tools = [CREATE_WORKOUTS_TOOL, RETRIEVE_WORKOUTS_TOOL]
         
         system_message = """
         Use the create_workouts tool to structure workouts rather than just describing them in text.
@@ -69,30 +70,37 @@ class Claude:
             if tool_uses:
                 tool_results = []
                 for tool_use in tool_uses:
-                    # Check for duplicate workout names
-                    duplicate_names = []
-                    valid_workouts = []
-                    
-                    for workout in current_use_workouts:
-                        if workout.workout_name in self.workouts:
-                            duplicate_names.append(workout.workout_name)
+                    if tool_use.name == "create_workouts":
+                        # Check for duplicate workout names
+                        duplicate_names = []
+                        valid_workouts = []
+                        
+                        for workout in current_use_workouts:
+                            if workout.workout_name in self.workouts:
+                                duplicate_names.append(workout.workout_name)
+                            else:
+                                valid_workouts.append(workout)
+                                self.workouts[workout.workout_name] = workout
+                        
+                        if duplicate_names:
+                            error_msg = f"Error: Workout names must be unique. The following names already exist: {', '.join(duplicate_names)}"
+                            tool_results.append({
+                                "type": "tool_result",
+                                "tool_use_id": tool_use.id,
+                                "content": error_msg,
+                                "is_error": True
+                            })
                         else:
-                            valid_workouts.append(workout)
-                            self.workouts[workout.workout_name] = workout
-                    
-                    if duplicate_names:
-                        error_msg = f"Error: Workout names must be unique. The following names already exist: {', '.join(duplicate_names)}"
+                            tool_results.append({
+                                "type": "tool_result",
+                                "tool_use_id": tool_use.id,
+                                "content": str([str(w) + "\n" for w in valid_workouts])
+                            })
+                    elif tool_use.name == "retrieve_workouts":
                         tool_results.append({
                             "type": "tool_result",
                             "tool_use_id": tool_use.id,
-                            "content": error_msg,
-                            "is_error": True
-                        })
-                    else:
-                        tool_results.append({
-                            "type": "tool_result",
-                            "tool_use_id": tool_use.id,
-                            "content": str([str(w) + "\n" for w in valid_workouts])
+                            "content": retrieve_all_workouts(self.workouts)
                         })
                 self.conversation_history.append({"role": "user", "content": tool_results})
             
