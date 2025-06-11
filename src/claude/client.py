@@ -19,8 +19,6 @@ class Claude:
     
     def chat(self, message: str) -> tuple[str, List[RunWorkout] | None]:
         """Chat interface with Claude that can create workouts."""
-        tools = [CREATE_WORKOUTS_TOOL, RETRIEVE_WORKOUTS_TOOL]
-        
         system_message = """
         Use the create_workouts tool to structure workouts rather than just describing them in text.
         You can create workouts in multiple responses if needed.
@@ -43,7 +41,7 @@ class Claude:
                 model="claude-sonnet-4-20250514",
                 max_tokens=20000,
                 system=system_message,
-                tools=tools,  # type: ignore
+                tools=[CREATE_WORKOUTS_TOOL, RETRIEVE_WORKOUTS_TOOL],  # type: ignore
                 messages=self.conversation_history
             )
             
