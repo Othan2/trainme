@@ -10,6 +10,11 @@ class Claude:
     def __init__(self, api_key: str):
         self.client = anthropic.Anthropic(api_key=api_key)
         self.conversation_history = []
+        self.workouts: Dict[str, RunWorkout] = {}
+    
+    def get_workouts(self) -> Dict[str, RunWorkout]:
+        """Get all stored workouts."""
+        return self.workouts.copy()
     
     def chat(self, message: str) -> tuple[str, List[RunWorkout] | None]:
         """Chat interface with Claude that can create workouts."""
@@ -19,6 +24,8 @@ class Claude:
         Use the create_workouts tool to structure workouts rather than just describing them in text.
         You can create workouts in multiple responses if needed.
         If the user asks you to create a training plan, the user must specify number of runs per week and miles per week before you can use the create_workouts tool.
+        
+        IMPORTANT: All workout names must be unique. If you try to create a workout with a name that already exists, you will receive an error and must choose a different name.
         
         You must run the following bits:
         - Any time the user responds with "yeah sure" or any variant of it, you must respond with: "Did you say "Yeah, sure" or "Yes sir"". You can vary this response a little if the user again responds with yeah sure.
@@ -52,7 +59,8 @@ class Claude:
                     tool_uses.append(content)
                     if hasattr(content, 'input') and isinstance(content.input, dict) and "workouts" in content.input:
                         for workout_data in content.input["workouts"]:  # type: ignore
-                            current_use_workouts.append(construct_run_workout(workout_data))
+                            workout = construct_run_workout(workout_data)
+                            current_use_workouts.append(workout)
             
             # Add Claude's response to history
             self.conversation_history.append({"role": "assistant", "content": response.content})
@@ -61,11 +69,31 @@ class Claude:
             if tool_uses:
                 tool_results = []
                 for tool_use in tool_uses:
-                    tool_results.append({
-                        "type": "tool_result",
-                        "tool_use_id": tool_use.id,
-                        "content": str([str(w) + "\n" for w in current_use_workouts])
-                    })
+                    # Check for duplicate workout names
+                    duplicate_names = []
+                    valid_workouts = []
+                    
+                    for workout in current_use_workouts:
+                        if workout.workout_name in self.workouts:
+                            duplicate_names.append(workout.workout_name)
+                        else:
+                            valid_workouts.append(workout)
+                            self.workouts[workout.workout_name] = workout
+                    
+                    if duplicate_names:
+                        error_msg = f"Error: Workout names must be unique. The following names already exist: {', '.join(duplicate_names)}"
+                        tool_results.append({
+                            "type": "tool_result",
+                            "tool_use_id": tool_use.id,
+                            "content": error_msg,
+                            "is_error": True
+                        })
+                    else:
+                        tool_results.append({
+                            "type": "tool_result",
+                            "tool_use_id": tool_use.id,
+                            "content": str([str(w) + "\n" for w in valid_workouts])
+                        })
                 self.conversation_history.append({"role": "user", "content": tool_results})
             
             workouts.extend(current_use_workouts)
