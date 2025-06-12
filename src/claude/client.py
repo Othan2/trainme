@@ -2,14 +2,17 @@ import anthropic
 from anthropic.types import TextBlock
 from typing import List, Dict, Any, cast
 import json
+
+from garmin.client import Garmin
 from ..garmin.models.run_workout import RunWorkout
 from .create_workout_tool import CREATE_WORKOUTS_TOOL, construct_run_workout
 from .retrieve_workouts_tool import RETRIEVE_WORKOUTS_TOOL, retrieve_all_workouts
 
 
 class Claude:
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, garmin_client: Garmin):
         self.client = anthropic.Anthropic(api_key=api_key)
+        self.garmin_client = garmin_client
         self.conversation_history = []
         self.workouts: Dict[str, RunWorkout] = {}
     

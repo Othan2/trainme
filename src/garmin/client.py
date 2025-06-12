@@ -18,7 +18,7 @@ class Garmin:
     """Class for fetching data from Garmin Connect."""
 
     def __init__(
-        self, email=None, password=None, is_cn=False, prompt_mfa=None, return_on_mfa=False
+        self, email: str, password: str, is_cn=False, prompt_mfa=None, return_on_mfa=False
     ):
         """Create a new class instance."""
         self.username = email
