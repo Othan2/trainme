@@ -1384,6 +1384,7 @@ class Garmin:
 
         return self.garth.post("connectapi", url, api=True)
 
+    # TODO add filters by sport.
     def get_workouts(self, start=0, end=100):
         """Return workouts from start till end."""
 
