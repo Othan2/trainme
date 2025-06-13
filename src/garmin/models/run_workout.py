@@ -10,11 +10,6 @@ from .workout import (
 
 @dataclass
 class RunWorkout(Workout):
-    workout_name: str
-    # Workout segments could be multiple types of activity, not just running. May want to allow that
-    workout_segments: List[WorkoutSegment]
-    is_wheelchair: bool = False
-
     def __str__(self) -> str:
         segments_str = "\n".join(str(segment) for segment in self.workout_segments)
         return f"{self.workout_name}:\n{segments_str}"
