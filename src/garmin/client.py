@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 import garth
 from .fit import FitEncoderWeight
 
-from .models.workout import Workout
+from .models.workout import WorkoutDetail
 from .parser import WorkoutParser
 
 logger = logging.getLogger(__name__)
@@ -1394,7 +1394,7 @@ class Garmin:
         params = {"start": start, "limit": end}
         return self.connectapi(url, params=params)
 
-    def get_workout_by_id(self, workout_id) -> Workout:
+    def get_workout_by_id(self, workout_id) -> WorkoutDetail:
         """Return workout by id."""
 
         url = f"{self.garmin_workouts}/workout/{workout_id}"
@@ -1410,7 +1410,7 @@ class Garmin:
 
         return self.download(url)
 
-    def upload_workout(self, workout: Workout):
+    def upload_workout(self, workout: WorkoutDetail):
         """Upload workout using json data."""
 
         url = f"{self.garmin_workouts}/workout"

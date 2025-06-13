@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 from .workout import (
-    Workout,
+    WorkoutDetail,
     SportType, 
     WorkoutSegment, 
     EstimatedDistanceUnit,
@@ -9,7 +9,7 @@ from .workout import (
 
 
 @dataclass
-class RunWorkout(Workout):
+class RunWorkout(WorkoutDetail):
     def __str__(self) -> str:
         segments_str = "\n".join(str(segment) for segment in self.workout_segments)
         return f"{self.workout_name}:\n{segments_str}"
