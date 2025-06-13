@@ -6,7 +6,7 @@ import json
 from garmin.client import Garmin
 from ..garmin.models.run_workout import RunWorkout
 from .create_workout_tool import CREATE_WORKOUTS_TOOL, construct_run_workout
-from .retrieve_workouts_tool import RETRIEVE_WORKOUTS_TOOL, retrieve_all_workouts
+from .retrieve_proposed_workouts_tool import RETRIEVE_PROPOSED_WORKOUTS_TOOL, retrieve_all_workouts
 
 
 class Claude:
@@ -44,7 +44,7 @@ class Claude:
                 model="claude-sonnet-4-20250514",
                 max_tokens=20000,
                 system=system_message,
-                tools=[CREATE_WORKOUTS_TOOL, RETRIEVE_WORKOUTS_TOOL],  # type: ignore
+                tools=[CREATE_WORKOUTS_TOOL, RETRIEVE_PROPOSED_WORKOUTS_TOOL],  # type: ignore
                 messages=self.conversation_history
             )
             

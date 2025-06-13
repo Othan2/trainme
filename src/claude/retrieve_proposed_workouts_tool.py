@@ -2,8 +2,8 @@ from typing import Dict, Any
 from ..garmin.models.run_workout import RunWorkout
 
 
-RETRIEVE_WORKOUTS_TOOL = {
-    "name": "retrieve_workouts",
+RETRIEVE_PROPOSED_WORKOUTS_TOOL = {
+    "name": "retrieve_proposed_workouts",
     "description": 
         """
         Retrieve all previously created workouts. Returns a summary of all workouts
