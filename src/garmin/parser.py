@@ -15,7 +15,7 @@ from .models.workout import (
 from .models.run_workout import RunWorkout
 
 
-class GarminWorkoutParser:
+class WorkoutParser:
     """Parser to convert Garmin API workout JSON to RunWorkout objects"""
     
     @staticmethod
@@ -84,9 +84,9 @@ class GarminWorkoutParser:
     def _parse_workout_step(step_data: Dict[str, Any]) -> WorkoutStep:
         """Parse JSON step data to WorkoutStep object"""
         step_order = step_data.get("stepOrder", 1)
-        step_type = GarminWorkoutParser._parse_step_type(step_data.get("stepType", {}))
-        end_condition = GarminWorkoutParser._parse_end_condition(step_data)
-        intensity = GarminWorkoutParser._parse_intensity_target(step_data)
+        step_type = WorkoutParser._parse_step_type(step_data.get("stepType", {}))
+        end_condition = WorkoutParser._parse_end_condition(step_data)
+        intensity = WorkoutParser._parse_intensity_target(step_data)
         
         return WorkoutStep(step_order, step_type, end_condition, intensity)
     
@@ -99,7 +99,7 @@ class GarminWorkoutParser:
         workout_steps = []
         for step_data in segment_data.get("workoutSteps", []):
             if step_data.get("type") == "ExecutableStepDTO":
-                workout_step = GarminWorkoutParser._parse_workout_step(step_data)
+                workout_step = WorkoutParser._parse_workout_step(step_data)
                 workout_steps.append(workout_step)
         
         return WorkoutSegment(segment_order, sport_type, workout_steps)
@@ -113,7 +113,7 @@ class GarminWorkoutParser:
         
         workout_segments = []
         for segment_data in workout_json.get("workoutSegments", []):
-            segment = GarminWorkoutParser._parse_workout_segment(segment_data)
+            segment = WorkoutParser._parse_workout_segment(segment_data)
             workout_segments.append(segment)
         
         return RunWorkout(workout_name, workout_segments, training_plan_id)
