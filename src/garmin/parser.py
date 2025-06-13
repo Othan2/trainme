@@ -109,10 +109,11 @@ class GarminWorkoutParser:
     def parse_workout(workout_json: Dict[str, Any]) -> RunWorkout:
         """Parse complete JSON workout to RunWorkout object"""
         workout_name = workout_json.get("workoutName", "Untitled Workout")
+        training_plan_id = workout_json.get("trainingPlanId", None)
         
         workout_segments = []
         for segment_data in workout_json.get("workoutSegments", []):
             segment = GarminWorkoutParser._parse_workout_segment(segment_data)
             workout_segments.append(segment)
         
-        return RunWorkout(workout_name, workout_segments)
+        return RunWorkout(workout_name, workout_segments, training_plan_id)
