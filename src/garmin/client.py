@@ -1394,7 +1394,7 @@ class Garmin:
         params = {"start": start, "limit": end}
         return self.connectapi(url, params=params)
 
-    def get_workout_by_id(self, workout_id):
+    def get_workout_by_id(self, workout_id) -> Workout:
         """Return workout by id."""
 
         url = f"{self.garmin_workouts}/workout/{workout_id}"
