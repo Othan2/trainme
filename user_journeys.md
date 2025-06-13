@@ -1,0 +1,2 @@
+- "I would like to make my current plan easier/harder"
+- "I want to change my XYZ workouts be more ABC"
