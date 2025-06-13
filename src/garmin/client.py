@@ -10,6 +10,7 @@ import garth
 from .fit import FitEncoderWeight
 
 from .models.workout import Workout
+from .parser import GarminWorkoutParser
 
 logger = logging.getLogger(__name__)
 
@@ -1397,7 +1398,9 @@ class Garmin:
         """Return workout by id."""
 
         url = f"{self.garmin_workouts}/workout/{workout_id}"
-        return self.connectapi(url)
+        resp = self.connectapi(url)
+        assert resp is Dict[str, Any]
+        return GarminWorkoutParser.parse_workout(resp)
 
     def download_workout(self, workout_id):
         """Download workout by id."""
