@@ -2,6 +2,7 @@ from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 from enum import Enum
+from datetime import datetime
 
 
 class SportType(Enum):
@@ -222,6 +223,17 @@ class WorkoutSegment:
 
 
 @dataclass
+class Author:
+    user_profile_pk: Optional[int] = None
+    display_name: Optional[str] = None
+    full_name: Optional[str] = None
+    profile_img_name_large: Optional[str] = None
+    profile_img_name_medium: Optional[str] = None
+    profile_img_name_small: Optional[str] = None
+    user_pro: bool = False
+    vivokid_user: bool = False
+
+@dataclass
 class EstimatedDistanceUnit:
     unit_key: Optional[str] = None
 
@@ -230,12 +242,40 @@ class EstimatedDistanceUnit:
 
 
 @dataclass
+class WorkoutOverview:
+    """Represents a workout overview as returned by Garmin Connect API"""
+    workout_id: int
+    owner_id: int
+    workout_name: str
+    sport_type: SportType
+    update_date: str
+    created_date: str
+    author: Author
+    shared: bool
+    estimated: bool
+    description: Optional[str] = None
+    training_plan_id: Optional[int] = None
+    estimated_duration_in_secs: Optional[int] = None
+    estimated_distance_in_meters: Optional[float] = None
+    estimate_type: Optional[str] = None
+    estimated_distance_unit: Optional[EstimatedDistanceUnit] = None
+    pool_length: float = 0.0
+    pool_length_unit: Optional[EstimatedDistanceUnit] = None
+    workout_provider: Optional[str] = None
+    workout_source_id: Optional[str] = None
+    consumer: Optional[str] = None
+    atp_plan_id: Optional[int] = None
+    workout_name_i18n_key: Optional[str] = None
+    description_i18n_key: Optional[str] = None
+    workout_thumbnail_url: Optional[str] = None
+
+@dataclass
 class WorkoutDetail(ABC):
     """Base class for all workout types"""
     workout_name: str
     # Workout segments could be multiple types of activity, not just running. May want to allow that
     workout_segments: List[WorkoutSegment]
-    training_plan_id: str | None = None
+    training_plan_id: Optional[str] = None
     is_wheelchair: bool = False
     
     @abstractmethod
