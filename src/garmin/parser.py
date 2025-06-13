@@ -72,8 +72,8 @@ class GarminWorkoutParser:
                 return HeartRateZoneTarget(zone)
             return NoTarget()
         elif target_key == "pace.zone":
-            lower = step_data.get("targetValueOne")
-            upper = step_data.get("targetValueTwo")
+            upper = step_data.get("targetValueOne")
+            lower = step_data.get("targetValueTwo")
             if lower is not None and upper is not None:
                 return PaceZoneTarget(lower, upper)
             return NoTarget()
@@ -104,6 +104,7 @@ class GarminWorkoutParser:
         
         return WorkoutSegment(segment_order, sport_type, workout_steps)
     
+    # Parses a workout from 
     @staticmethod
     def parse_workout(workout_json: Dict[str, Any]) -> RunWorkout:
         """Parse complete JSON workout to RunWorkout object"""
