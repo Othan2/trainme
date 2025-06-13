@@ -229,12 +229,13 @@ class EstimatedDistanceUnit:
         return {"unitKey": self.unit_key}
 
 
+@dataclass
 class Workout(ABC):
     """Base class for all workout types"""
-    training_plan_id: str
     workout_name: str
     # Workout segments could be multiple types of activity, not just running. May want to allow that
     workout_segments: List[WorkoutSegment]
+    training_plan_id: str | None = None
     is_wheelchair: bool = False
     
     @abstractmethod
