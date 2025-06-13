@@ -230,7 +230,7 @@ class EstimatedDistanceUnit:
 
 
 @dataclass
-class Workout(ABC):
+class WorkoutDetail(ABC):
     """Base class for all workout types"""
     workout_name: str
     # Workout segments could be multiple types of activity, not just running. May want to allow that
