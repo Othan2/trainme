@@ -1,6 +1,7 @@
 from src.garmin.client import Garmin
 from src.claude.client import Claude
 import os
+import readline  # noqa: F401
 from dotenv import load_dotenv
 
 def main():
