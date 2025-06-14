@@ -23,3 +23,12 @@ def retrieve_all_workouts(workouts: Dict[str, RunWorkout]) -> str:
         return "No workouts have been created yet."
     
     return str(len(workouts)) + " created total.\n\n" + "\n\n".join(str(workout) for workout in workouts.values())
+
+
+def handle_retrieve_workouts_tool(tool_use, stored_workouts: Dict[str, RunWorkout]) -> Dict[str, Any]:
+    """Handle retrieve_workouts tool execution."""
+    return {
+        "type": "tool_result",
+        "tool_use_id": tool_use.id,
+        "content": retrieve_all_workouts(stored_workouts)
+    }
