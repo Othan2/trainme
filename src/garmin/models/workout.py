@@ -268,6 +268,11 @@ class WorkoutOverview:
     workout_name_i18n_key: Optional[str] = None
     description_i18n_key: Optional[str] = None
     workout_thumbnail_url: Optional[str] = None
+    
+    def __str__(self) -> str:
+        author_name = self.author.display_name or self.author.full_name or "Unknown"
+        provider = f" ({self.workout_provider})" if self.workout_provider else ""
+        return f"{self.workout_name} by {author_name}. Workout provider: {provider}"
 
 @dataclass
 class WorkoutDetail(ABC):
