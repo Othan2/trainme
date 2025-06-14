@@ -3,10 +3,11 @@ from anthropic.types import TextBlock
 from typing import List, Dict, Any, cast
 import json
 
-from garmin.client import Garmin
+from ..garmin.client import Garmin
 from ..garmin.models.run_workout import RunWorkout
 from .create_workout_tool import CREATE_WORKOUTS_TOOL, construct_run_workout, handle_create_workouts_tool
 from .retrieve_proposed_workouts_tool import RETRIEVE_PROPOSED_WORKOUTS_TOOL, retrieve_all_workouts, handle_retrieve_workouts_tool
+from .retrieve_garmin_workouts_tool import RETRIEVE_GARMIN_WORKOUTS_TOOL, handle_retrieve_garmin_workouts_tool
 
 
 class Claude:
@@ -17,7 +18,8 @@ class Claude:
         self.workouts: Dict[str, RunWorkout] = {}
         self.tool_handlers = {
             "create_workouts": lambda tool_use: handle_create_workouts_tool(tool_use, self.workouts),
-            "retrieve_proposed_workouts": lambda tool_use: handle_retrieve_workouts_tool(tool_use, self.workouts)
+            "retrieve_proposed_workouts": lambda tool_use: handle_retrieve_workouts_tool(tool_use, self.workouts),
+            "retrieve_garmin_workouts": lambda tool_use: handle_retrieve_garmin_workouts_tool(tool_use, self.garmin_client)
         }
     
     def get_workouts(self) -> Dict[str, RunWorkout]:
@@ -47,7 +49,7 @@ class Claude:
                 model="claude-sonnet-4-20250514",
                 max_tokens=20000,
                 system=system_message,
-                tools=[CREATE_WORKOUTS_TOOL, RETRIEVE_PROPOSED_WORKOUTS_TOOL],  # type: ignore
+                tools=[CREATE_WORKOUTS_TOOL, RETRIEVE_PROPOSED_WORKOUTS_TOOL, RETRIEVE_GARMIN_WORKOUTS_TOOL],  # type: ignore
                 messages=self.conversation_history
             )
             
@@ -76,7 +78,15 @@ class Claude:
                         tool_results.append(result)
                         
 
-                self.conversation_history.append({"role": "user", "content": tool_results})
+                # Convert tool results to proper format for conversation history
+                content_blocks = []
+                for result in tool_results:
+                    content_blocks.append({
+                        "type": "tool_result",
+                        "tool_use_id": result["tool_use_id"],
+                        "content": result["content"]
+                    })
+                self.conversation_history.append({"role": "user", "content": content_blocks})
             
 
             
