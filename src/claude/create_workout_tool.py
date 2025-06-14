@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 from ..garmin.models.run_workout import RunWorkout
 from ..garmin.models.workout import (
     WorkoutSegment, 
@@ -114,3 +114,43 @@ def construct_run_workout(tool_output: Dict[str, Any]) -> RunWorkout:
         workout_name=tool_output["workout_name"],
         workout_segments=[segment]
     )
+
+
+def handle_create_workouts_tool(tool_use, stored_workouts: Dict[str, RunWorkout]) -> Dict[str, Any]:
+    """Handle create_workouts tool execution."""
+    # Extract workouts from tool_use
+    current_use_workouts = []
+    if hasattr(tool_use, 'input') and isinstance(tool_use.input, dict) and "workouts" in tool_use.input:
+        for workout_data in tool_use.input["workouts"]:  # type: ignore
+            workout = construct_run_workout(workout_data)
+            current_use_workouts.append(workout)
+    
+    # Check for duplicate workout names
+    duplicate_names = []
+    valid_workouts = []
+    
+    for workout in current_use_workouts:
+        if workout.workout_name in stored_workouts:
+            duplicate_names.append(workout.workout_name)
+        else:
+            valid_workouts.append(workout)
+            stored_workouts[workout.workout_name] = workout
+    
+
+    
+    if duplicate_names:
+        error_msg = f"Error: Workout names must be unique. The following names already exist: {', '.join(duplicate_names)}"
+        return {
+            "type": "tool_result",
+            "tool_use_id": tool_use.id,
+            "content": error_msg,
+            "is_error": True,
+            "workouts": []
+        }
+    else:
+        return {
+            "type": "tool_result",
+            "tool_use_id": tool_use.id,
+            "content": str([str(w) + "\n" for w in valid_workouts]),
+            "workouts": valid_workouts
+        }

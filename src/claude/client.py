@@ -5,8 +5,8 @@ import json
 
 from garmin.client import Garmin
 from ..garmin.models.run_workout import RunWorkout
-from .create_workout_tool import CREATE_WORKOUTS_TOOL, construct_run_workout
-from .retrieve_proposed_workouts_tool import RETRIEVE_PROPOSED_WORKOUTS_TOOL, retrieve_all_workouts
+from .create_workout_tool import CREATE_WORKOUTS_TOOL, construct_run_workout, handle_create_workouts_tool
+from .retrieve_proposed_workouts_tool import RETRIEVE_PROPOSED_WORKOUTS_TOOL, retrieve_all_workouts, handle_retrieve_workouts_tool
 
 
 class Claude:
@@ -15,6 +15,10 @@ class Claude:
         self.garmin_client = garmin_client
         self.conversation_history = []
         self.workouts: Dict[str, RunWorkout] = {}
+        self.tool_handlers = {
+            "create_workouts": lambda tool_use: handle_create_workouts_tool(tool_use, self.workouts),
+            "retrieve_proposed_workouts": lambda tool_use: handle_retrieve_workouts_tool(tool_use, self.workouts)
+        }
     
     def get_workouts(self) -> Dict[str, RunWorkout]:
         """Get all stored workouts."""
@@ -37,7 +41,6 @@ class Claude:
         self.conversation_history.append({"role": "user", "content": message})
         
         chat_response = ""
-        workouts = []
         
         while True:
             response = self.client.messages.create(
@@ -52,67 +55,37 @@ class Claude:
             
             tool_uses = []
             
-            current_use_workouts = []
+            # First pass: extract text and collect tool_uses
             for content in response.content:
                 if hasattr(content, 'type') and content.type == 'text':
                     text_content = self._extract_text(content)
                     chat_response += text_content
                 elif hasattr(content, 'type') and content.type == 'tool_use':
                     tool_uses.append(content)
-                    if hasattr(content, 'input') and isinstance(content.input, dict) and "workouts" in content.input:
-                        for workout_data in content.input["workouts"]:  # type: ignore
-                            workout = construct_run_workout(workout_data)
-                            current_use_workouts.append(workout)
             
             # Add Claude's response to history
             self.conversation_history.append({"role": "assistant", "content": response.content})
             
-            # Add tool results if any tools were used
+            # Second pass: process all tool_uses together
+            current_use_workouts = []
             if tool_uses:
                 tool_results = []
                 for tool_use in tool_uses:
-                    if tool_use.name == "create_workouts":
-                        # Check for duplicate workout names
-                        duplicate_names = []
-                        valid_workouts = []
+                    if tool_use.name in self.tool_handlers:
+                        result = self.tool_handlers[tool_use.name](tool_use)
+                        tool_results.append(result)
                         
-                        for workout in current_use_workouts:
-                            if workout.workout_name in self.workouts:
-                                duplicate_names.append(workout.workout_name)
-                            else:
-                                valid_workouts.append(workout)
-                                self.workouts[workout.workout_name] = workout
-                        
-                        if duplicate_names:
-                            error_msg = f"Error: Workout names must be unique. The following names already exist: {', '.join(duplicate_names)}"
-                            tool_results.append({
-                                "type": "tool_result",
-                                "tool_use_id": tool_use.id,
-                                "content": error_msg,
-                                "is_error": True
-                            })
-                        else:
-                            tool_results.append({
-                                "type": "tool_result",
-                                "tool_use_id": tool_use.id,
-                                "content": str([str(w) + "\n" for w in valid_workouts])
-                            })
-                    elif tool_use.name == "retrieve_workouts":
-                        tool_results.append({
-                            "type": "tool_result",
-                            "tool_use_id": tool_use.id,
-                            "content": retrieve_all_workouts(self.workouts)
-                        })
+
                 self.conversation_history.append({"role": "user", "content": tool_results})
             
-            workouts.extend(current_use_workouts)
+
             
             # Continue if stop reason is tool_use, otherwise break.
             # Allows claude to generate a bunch of workouts at once.
             if response.stop_reason != "tool_use":
                 break
                 
-        return chat_response, workouts
+        return chat_response, list(self.workouts.values())
     
 
 
