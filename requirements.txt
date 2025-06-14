@@ -1,6 +1,0 @@
-pyyaml>=6.0
-requests>=2.31.0
-click>=8.1.0
-cloudscraper>=1.2.0
-garth==0.5.13
-anthropic>=0.3.0
