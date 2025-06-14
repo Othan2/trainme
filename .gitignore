@@ -9,6 +9,9 @@ __pycache__/
 .venv
 env/
 venv/
+trainme.egginfo/
+uv.lock
+
 # IDEs
 .vscode/
 *.swp
