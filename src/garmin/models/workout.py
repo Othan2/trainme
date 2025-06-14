@@ -1,12 +1,23 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union, Literal
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 from enum import Enum
 from datetime import datetime
-
+from pydantic import BaseModel, Field, Discriminator, field_validator
+from typing import Annotated
 
 class SportType(Enum):
     RUNNING = ("running", 1, 1)
+
+    @classmethod
+    def _missing_(cls, value):
+        # Handle list inputs (from JSON serialization) by converting to tuple
+        if isinstance(value, list) and len(value) == 3:
+            value = tuple(value)
+        for item in cls:
+            if item.value == value:
+                return item
+        raise ValueError(f"{value} is not a valid {cls.__name__}")
 
     def to_dict(self) -> Dict[str, Any]:
         key, sport_id, display_order = self.value
@@ -24,6 +35,16 @@ class EndConditionType(Enum):
     DISTANCE = ("distance", 3, 3)
     CALORIES = ("calories", 4, 4)
 
+    @classmethod
+    def _missing_(cls, value):
+        # Handle list inputs (from JSON serialization) by converting to tuple
+        if isinstance(value, list) and len(value) == 3:
+            value = tuple(value)
+        for item in cls:
+            if item.value == value:
+                return item
+        raise ValueError(f"{value} is not a valid {cls.__name__}")
+
     def to_dict(self) -> Dict[str, Any]:
         key, condition_id, display_order = self.value
         
@@ -34,11 +55,10 @@ class EndConditionType(Enum):
         }
 
 
-@dataclass
-class EndCondition:
+class EndCondition(BaseModel):
     condition_type: EndConditionType
     # Seconds for a time end condition. Meters for a distance or lap.button end condition.
-    value: float
+    value: Annotated[float, Field(description="Time in seconds for a time end condition. Meters for a distance or lap.button end condition.")]
     displayable: bool = True
 
     def to_dict(self) -> Dict[str, Any]:
@@ -55,15 +75,14 @@ class EndCondition:
         return f"{self.condition_type.value[0]}: {self.value}"
 
 
-class IntensityTarget(ABC):
+class IntensityTarget(BaseModel, ABC):
     @abstractmethod
     def to_target_dict(self) -> Dict[str, Any]:
         """Return the target type dictionary for API calls"""
         pass
 
-@dataclass 
 class NoTarget(IntensityTarget):
-    target_value_unit: Optional[str] = None
+    target_type: Literal["no_target"] = Field(default="no_target", description="Discriminator field")
     
     def to_target_dict(self) -> Dict[str, Any]:
         return {
@@ -75,14 +94,13 @@ class NoTarget(IntensityTarget):
     def __str__(self) -> str:
         return "No target"
 
-@dataclass
 class CadenceTarget(IntensityTarget):
-    # steps per minute
-    lower_bound: float
-    upper_bound: float
+    target_type: Literal["cadence"] = Field(default="cadence", description="Discriminator field")
+    lower_bound: int = Field(description="Lower bound steps per minute")
+    upper_bound: int = Field(description="Upper bound steps per minute")
     target_value_unit: Optional[str] = None
     
-    def __post_init__(self):
+    def model_post_init(self, __context) -> None:
         if self.lower_bound >= self.upper_bound:
             raise ValueError(f"Lower bound ({self.lower_bound}) must be less than upper bound ({self.upper_bound})")
     
@@ -96,10 +114,9 @@ class CadenceTarget(IntensityTarget):
     def __str__(self) -> str:
         return f"Cadence {self.lower_bound}-{self.upper_bound} spm"
 
-@dataclass
 class HeartRateZoneTarget(IntensityTarget):
-    # hr zone. could also do BPM range with bounds in future.
-    zone_number: int
+    target_type: Literal["heart_rate_zone"] = Field(default="heart_rate_zone", description="Discriminator field")
+    zone_number: Annotated[int, Field(description="Heart rate zone. 1 through 5.")]
     target_value_unit: Optional[str] = None
     
     def to_target_dict(self) -> Dict[str, Any]:
@@ -112,13 +129,13 @@ class HeartRateZoneTarget(IntensityTarget):
     def __str__(self) -> str:
         return f"HR Zone {self.zone_number}"
 
-@dataclass
 class PaceZoneTarget(IntensityTarget):
-    lower_bound: float
-    upper_bound: float
+    target_type: Literal["pace_zone"] = Field(default="pace_zone", description="Discriminator field")
+    lower_bound: Annotated[float, Field(description="Faster pace in zone to run at, in meters per second.")]
+    upper_bound: Annotated[float, Field(description="Slower pace in zone to run at, in meters per second.")]
     target_value_unit: Optional[str] = None
     
-    def __post_init__(self):
+    def model_post_init(self, __context) -> None:
         if self.lower_bound < self.upper_bound:
             raise ValueError(f"Pace lower bound ({self.lower_bound}) must be greater than upper bound ({self.upper_bound}) - it is measured in meters per second")
     
@@ -150,6 +167,16 @@ class StepType(Enum):
     REST = ("rest", 5, 5)
     OTHER = ("other", 7, 7)
 
+    @classmethod
+    def _missing_(cls, value):
+        # Handle list inputs (from JSON serialization) by converting to tuple
+        if isinstance(value, list) and len(value) == 3:
+            value = tuple(value)
+        for item in cls:
+            if item.value == value:
+                return item
+        raise ValueError(f"{value} is not a valid {cls.__name__}")
+
     def to_dict(self) -> Dict[str, Any]:
         key, step_id, display_order = self.value
         
@@ -160,12 +187,16 @@ class StepType(Enum):
         }
 
 
-@dataclass
-class WorkoutStep:
+IntensityTargetType = Annotated[
+    Union[NoTarget, CadenceTarget, HeartRateZoneTarget, PaceZoneTarget],
+    Field(discriminator='target_type')
+]
+
+class WorkoutStep(BaseModel):
     step_order: int
     step_type: StepType
-    end_condition: EndCondition
-    intensity: IntensityTarget
+    end_condition: Annotated[EndCondition, Field(description="Condition to determine when the workout step is complete.")]
+    intensity: IntensityTargetType
 
     def __str__(self) -> str:
         return f"{self.step_type.value[0].title()}: {self.end_condition} @ {self.intensity}"
@@ -198,11 +229,10 @@ class WorkoutStep:
         return result
 
 
-@dataclass
-class WorkoutSegment:
+class WorkoutSegment(BaseModel):
     segment_order: int
     sport_type: SportType
-    workout_steps: List[WorkoutStep]
+    workout_steps: Annotated[List[WorkoutStep], Field(description="Individual steps in the workout to complete.")]
 
     def __str__(self) -> str:
         steps_str = "\n    ".join(str(step) for step in self.workout_steps)
@@ -274,16 +304,24 @@ class WorkoutOverview:
         provider = f" ({self.workout_provider})" if self.workout_provider else ""
         return f"{self.workout_name} by {author_name}. Workout provider: {provider}. ID: {self.workout_id}"
 
-@dataclass
-class WorkoutDetail(ABC):
+class WorkoutDetail(ABC, BaseModel):
     """Base class for all workout types"""
-    workout_name: str
+    workout_name: str = Field(description="Name of the workout.")
     # Workout segments could be multiple types of activity, not just running. May want to allow that
-    workout_segments: List[WorkoutSegment]
-    training_plan_id: Optional[str] = None
+    workout_segments: List[WorkoutSegment] =  Field(description="List of individual workout segments. Each activity type in the workout needs its own segment.")
+    workout_source_id: Optional[str]= Field(default=None, description="Unique id for source of the training plan.")
+    training_plan_id: Optional[str] = Field(default=None, description="Unique identifier of the training plan.")
     is_wheelchair: bool = False
+    
+
     
     @abstractmethod
     def to_dict(self) -> Dict[str, Any]:
-        """Convert the workout to a dictionary representation for API calls"""
+        """Convert the workout to a dictionary representation for Garmin API calls"""
         pass
+
+
+from .run_workout import RunWorkout
+
+# Union type for all concrete workout types
+WorkoutDetailType = Union[RunWorkout]

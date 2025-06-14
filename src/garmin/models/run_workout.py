@@ -8,7 +8,6 @@ from .workout import (
 )
 
 
-@dataclass
 class RunWorkout(WorkoutDetail):
     def __str__(self) -> str:
         segments_str = "\n".join(str(segment) for segment in self.workout_segments)
