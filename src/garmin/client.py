@@ -59,12 +59,13 @@ class Garmin:
         self.unit_system = None
         self.login()
         self._initialized = True
+        Garmin._instance = self
 
     @classmethod
-    def get_instance(cls, email: str, password: str, is_cn=False, prompt_mfa=None, return_on_mfa=False):
+    def get_instance(cls) -> 'Garmin':
         """Get singleton instance of Garmin client."""
         if cls._instance is None:
-            cls._instance = cls(email, password, is_cn, prompt_mfa, return_on_mfa)
+            raise GarminConnectConnectionError("Failed to retrieve Garmin singleton. Ensure the object is initialized before calling get_instance()")
         return cls._instance
 
     def __enter__(self):
