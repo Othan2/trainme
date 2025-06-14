@@ -5,8 +5,8 @@ import json
 
 from ..garmin.client import Garmin
 from ..garmin.models.run_workout import RunWorkout
-from .create_workout_tool import CREATE_WORKOUTS_TOOL, construct_run_workout, handle_create_workouts_tool
-from .retrieve_proposed_workouts_tool import RETRIEVE_PROPOSED_WORKOUTS_TOOL, retrieve_all_workouts, handle_retrieve_workouts_tool
+from .create_workout_tool import CREATE_WORKOUTS_TOOL, handle_create_workouts_tool
+from .retrieve_proposed_workouts_tool import RETRIEVE_PROPOSED_WORKOUTS_TOOL, handle_retrieve_workouts_tool
 from .retrieve_garmin_workouts_tool import RETRIEVE_GARMIN_WORKOUTS_TOOL, handle_retrieve_garmin_workouts_tool
 
 

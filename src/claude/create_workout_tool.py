@@ -64,7 +64,7 @@ CREATE_WORKOUTS_TOOL = {
 }
 
 
-def construct_run_workout(tool_output: Dict[str, Any]) -> RunWorkout:
+def _construct_run_workout(tool_output: Dict[str, Any]) -> RunWorkout:
     """Convert tool input to RunWorkout object."""
     workout_steps = []
     
@@ -122,7 +122,7 @@ def handle_create_workouts_tool(tool_use, stored_workouts: Dict[str, RunWorkout]
     current_use_workouts = []
     if hasattr(tool_use, 'input') and isinstance(tool_use.input, dict) and "workouts" in tool_use.input:
         for workout_data in tool_use.input["workouts"]:  # type: ignore
-            workout = construct_run_workout(workout_data)
+            workout = _construct_run_workout(workout_data)
             current_use_workouts.append(workout)
     
     # Check for duplicate workout names
