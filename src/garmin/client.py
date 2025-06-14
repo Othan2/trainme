@@ -1404,7 +1404,7 @@ class Garmin:
 
         url = f"{self.garmin_workouts}/workout/{workout_id}"
         resp = self.connectapi(url)
-        assert resp is Dict[str, Any]
+        assert isinstance(resp, dict)
         return WorkoutParser.parse_workout(resp)
 
     def download_workout(self, workout_id):

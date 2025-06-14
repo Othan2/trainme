@@ -7,7 +7,7 @@ from ..garmin.client import Garmin
 from ..garmin.models.run_workout import RunWorkout
 from .create_workout_tool import CREATE_WORKOUTS_TOOL, handle_create_workouts_tool
 from .retrieve_proposed_workouts_tool import RETRIEVE_PROPOSED_WORKOUTS_TOOL, handle_retrieve_workouts_tool
-from .retrieve_garmin_workouts_tool import RETRIEVE_GARMIN_WORKOUTS_TOOL, handle_retrieve_garmin_workouts_tool
+from .retrieve_garmin_workouts_tool import RETRIEVE_GARMIN_WORKOUTS_TOOL, handle_retrieve_garmin_workouts_tool, RETRIEVE_GARMIN_WORKOUT_DETAILS_TOOL, handle_retrieve_garmin_workout_details_tool
 
 
 class Claude:
@@ -19,7 +19,8 @@ class Claude:
         self.tool_handlers = {
             "create_workouts": lambda tool_use: handle_create_workouts_tool(tool_use, self.workouts),
             "retrieve_proposed_workouts": lambda tool_use: handle_retrieve_workouts_tool(tool_use, self.workouts),
-            "retrieve_garmin_workouts": lambda tool_use: handle_retrieve_garmin_workouts_tool(tool_use, self.garmin_client)
+            "retrieve_garmin_workouts": lambda tool_use: handle_retrieve_garmin_workouts_tool(tool_use, self.garmin_client),
+            "retrieve_garmin_workout_details": lambda tool_use: handle_retrieve_garmin_workout_details_tool(tool_use, self.garmin_client)
         }
     
     def get_workouts(self) -> Dict[str, RunWorkout]:
@@ -49,7 +50,7 @@ class Claude:
                 model="claude-sonnet-4-20250514",
                 max_tokens=20000,
                 system=system_message,
-                tools=[CREATE_WORKOUTS_TOOL, RETRIEVE_PROPOSED_WORKOUTS_TOOL, RETRIEVE_GARMIN_WORKOUTS_TOOL],  # type: ignore
+                tools=[CREATE_WORKOUTS_TOOL, RETRIEVE_PROPOSED_WORKOUTS_TOOL, RETRIEVE_GARMIN_WORKOUTS_TOOL, RETRIEVE_GARMIN_WORKOUT_DETAILS_TOOL],  # type: ignore
                 messages=self.conversation_history
             )
             
