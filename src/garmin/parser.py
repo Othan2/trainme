@@ -10,7 +10,10 @@ from .models.workout import (
     PaceZoneTarget,
     StepType,
     WorkoutStep,
-    WorkoutSegment
+    WorkoutSegment,
+    WorkoutOverview,
+    Author,
+    EstimatedDistanceUnit
 )
 from .models.run_workout import RunWorkout
 
@@ -104,6 +107,25 @@ class WorkoutParser:
         
         return WorkoutSegment(segment_order, sport_type, workout_steps)
     
+    @staticmethod
+    def _parse_author(author_data: Dict[str, Any]) -> Author:
+        """Parse JSON author data to Author object"""
+        return Author(
+            user_profile_pk=author_data.get("userProfilePk"),
+            display_name=author_data.get("displayName"),
+            full_name=author_data.get("fullName"),
+            profile_img_name_large=author_data.get("profileImgNameLarge"),
+            profile_img_name_medium=author_data.get("profileImgNameMedium"),
+            profile_img_name_small=author_data.get("profileImgNameSmall"),
+            user_pro=author_data.get("userPro", False),
+            vivokid_user=author_data.get("vivokidUser", False)
+        )
+    
+    @staticmethod
+    def _parse_estimated_distance_unit(unit_data: Dict[str, Any]) -> EstimatedDistanceUnit:
+        """Parse JSON unit data to EstimatedDistanceUnit object"""
+        return EstimatedDistanceUnit(unit_key=unit_data.get("unitKey"))
+    
     # Parses a workout from 
     @staticmethod
     def parse_workout(workout_json: Dict[str, Any]) -> RunWorkout:
@@ -117,3 +139,50 @@ class WorkoutParser:
             workout_segments.append(segment)
         
         return RunWorkout(workout_name, workout_segments, training_plan_id)
+    
+    @staticmethod
+    def parse_workout_overview(overview_json: Dict[str, Any]) -> WorkoutOverview:
+        """Parse JSON workout overview to WorkoutOverview object"""
+        sport_type = SportType.RUNNING  # Default to running for now
+        
+        author_data = overview_json.get("author", {})
+        author = WorkoutParser._parse_author(author_data)
+        
+        estimated_distance_unit = None
+        if overview_json.get("estimatedDistanceUnit"):
+            estimated_distance_unit = WorkoutParser._parse_estimated_distance_unit(
+                overview_json["estimatedDistanceUnit"]
+            )
+        
+        pool_length_unit = None
+        if overview_json.get("poolLengthUnit"):
+            pool_length_unit = WorkoutParser._parse_estimated_distance_unit(
+                overview_json["poolLengthUnit"]
+            )
+        
+        return WorkoutOverview(
+            workout_id=overview_json.get("workoutId", 0),
+            owner_id=overview_json.get("ownerId", 0),
+            workout_name=overview_json.get("workoutName", "Untitled Workout"),
+            sport_type=sport_type,
+            update_date=overview_json.get("updateDate", ""),
+            created_date=overview_json.get("createdDate", ""),
+            author=author,
+            shared=overview_json.get("shared", False),
+            estimated=overview_json.get("estimated", False),
+            description=overview_json.get("description"),
+            training_plan_id=overview_json.get("trainingPlanId"),
+            estimated_duration_in_secs=overview_json.get("estimatedDurationInSeconds"),
+            estimated_distance_in_meters=overview_json.get("estimatedDistanceInMeters"),
+            estimate_type=overview_json.get("estimateType"),
+            estimated_distance_unit=estimated_distance_unit,
+            pool_length=overview_json.get("poolLength", 0.0),
+            pool_length_unit=pool_length_unit,
+            workout_provider=overview_json.get("workoutProvider"),
+            workout_source_id=overview_json.get("workoutSourceId"),
+            consumer=overview_json.get("consumer"),
+            atp_plan_id=overview_json.get("atpPlanId"),
+            workout_name_i18n_key=overview_json.get("workoutNameI18nKey"),
+            description_i18n_key=overview_json.get("descriptionI18nKey"),
+            workout_thumbnail_url=overview_json.get("workoutThumbnailUrl")
+        )
