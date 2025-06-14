@@ -6,7 +6,7 @@ import json
 import inspect
 import readline  # noqa: F401
 from dotenv import load_dotenv
-from ..src.garmin.client import Garmin
+from src.garmin.client import Garmin
 
 def print_methods(garmin_client):
     """Print all available methods of the Garmin client."""

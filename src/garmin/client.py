@@ -727,14 +727,14 @@ class Garmin:
             raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
         return response
 
-    def get_training_readiness(self, cdate: str) -> Dict[str, Any]:
+    def get_training_readiness(self, cdate: str) -> List[Any]:
         """Return training readiness data for current user."""
 
         url = f"/metrics-service/metrics/trainingreadiness/{cdate}"
         logger.debug("Requesting training readiness data")
 
         response = self.connectapi(url)
-        if not isinstance(response, dict):
+        if not isinstance(response, list):
             raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
         return response
 
