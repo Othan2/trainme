@@ -7,6 +7,7 @@ from pathlib import Path
 import garth
 
 from garmin.client import Garmin
+from src.garmin.models.workout import WorkoutDetailType
 
 mcp = FastMCP(name="Garmin Connect Server", instructions="""
                  This server provides an integration with Garmin Connect.
@@ -33,6 +34,11 @@ def get_activities(start: int = 0, limit: int = 20, activitytype: Optional[str] 
         List of activity dictionaries with details like name, distance, duration, etc.
     """
     return Garmin.get_instance().get_activities(start=start, limit=limit, activitytype=activitytype)
+
+
+@mcp.tool
+def create_workout(w: WorkoutDetailType) -> str:
+    return str(w)
 
 if __name__ == "__main__":
     mcp.run()
