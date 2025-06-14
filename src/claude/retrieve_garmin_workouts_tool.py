@@ -1,4 +1,5 @@
 from typing import Dict, Any, List
+from ..garmin.client import Garmin
 
 
 RETRIEVE_GARMIN_WORKOUTS_TOOL = {
@@ -26,4 +27,41 @@ RETRIEVE_GARMIN_WORKOUTS_TOOL = {
     }
 }
 
-# WIP: need a way to convert json response from garmin into Workouts.
+
+def handle_retrieve_garmin_workouts_tool(tool_use, garmin_client: Garmin):
+    """Handle the retrieve_garmin_workouts tool call."""
+    print(f"got tool_use:\n{tool_use}")
+    inputs = tool_use.input if hasattr(tool_use, 'input') else {}
+    
+    start = inputs.get('start', 0)
+    limit = inputs.get('limit', 100)
+    
+    try:
+        workouts = garmin_client.get_workouts(start=start, end=limit)
+        
+        # Build detailed text response showing all workouts
+        if not workouts:
+            workout_text = "No workouts found in Garmin Connect."
+        else:
+            workout_lines = [f"Retrieved {len(workouts)} workouts from Garmin Connect:\n"]
+            
+            workout_lines.append("\n".join([str(workout) for workout in workouts]))
+            
+            workout_text = "\n\n".join(workout_lines)
+        
+        return {
+            "tool_use_id": tool_use.id,
+            "content": [{
+                "type": "text",
+                "text": workout_text
+            }]
+        }
+        
+    except Exception as e:
+        return {
+            "tool_use_id": tool_use.id,
+            "content": [{
+                "type": "text", 
+                "text": f"Error retrieving workouts from Garmin Connect: {str(e)}"
+            }]
+        }
