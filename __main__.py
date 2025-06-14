@@ -18,7 +18,7 @@ def main():
     assert password is not None
     assert api_key is not None
     
-    garmin_client = Garmin.get_instance(email, password)
+    garmin_client = Garmin(email, password)
     
     print("Connected to Garmin Connect")
     claude = Claude(api_key=api_key, garmin_client=garmin_client)
