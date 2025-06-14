@@ -17,11 +17,16 @@ logger = logging.getLogger(__name__)
 
 class Garmin:
     """Class for fetching data from Garmin Connect."""
+    
+    _instance = None
+    _initialized = False
 
     def __init__(
         self, email: str, password: str, is_cn=False, prompt_mfa=None, return_on_mfa=False
     ):
         """Create a new class instance."""
+        if self._initialized:
+            return
         self.username = email
         self.password = password
         # use .cn urls (China)
@@ -52,6 +57,15 @@ class Garmin:
         self.display_name = None
         self.full_name = None
         self.unit_system = None
+        self.login()
+        self._initialized = True
+
+    @classmethod
+    def get_instance(cls, email: str, password: str, is_cn=False, prompt_mfa=None, return_on_mfa=False):
+        """Get singleton instance of Garmin client."""
+        if cls._instance is None:
+            cls._instance = cls(email, password, is_cn, prompt_mfa, return_on_mfa)
+        return cls._instance
 
     def __enter__(self):
         """Initialize garth client when entering context."""
