@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trainme"
+version = "0.1.0"
+description = "Conversational running trainer that syncs to Garmin Connect"
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0",
+    "requests>=2.31.0", 
+    "click>=8.1.0",
+    "cloudscraper>=1.2.0",
+    "garth==0.5.13",
+    "anthropic>=0.3.0",
+    "fastmcp>=2.8.0"
+]
+
+[project.scripts]
+trainme = "src.trainme_cli:cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]

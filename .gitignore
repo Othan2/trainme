@@ -9,7 +9,7 @@ __pycache__/
 .venv
 env/
 venv/
-trainme.egginfo/
+trainme.egg-info/
 uv.lock
 
 # IDEs
