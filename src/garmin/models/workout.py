@@ -272,7 +272,7 @@ class WorkoutOverview:
     def __str__(self) -> str:
         author_name = self.author.display_name or self.author.full_name or "Unknown"
         provider = f" ({self.workout_provider})" if self.workout_provider else ""
-        return f"{self.workout_name} by {author_name}. Workout provider: {provider}"
+        return f"{self.workout_name} by {author_name}. Workout provider: {provider}. ID: {self.workout_id}"
 
 @dataclass
 class WorkoutDetail(ABC):
