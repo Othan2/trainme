@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 import garth
 from .fit import FitEncoderWeight
 
-from .models.workout import WorkoutDetail
+from .models.workout import WorkoutDetail, WorkoutOverview
 from .parser import WorkoutParser
 
 logger = logging.getLogger(__name__)
@@ -1386,13 +1386,18 @@ class Garmin:
         return self.garth.post("connectapi", url, api=True)
 
     # TODO add filters by sport.
-    def get_workouts(self, start=0, end=100):
+    def get_workouts(self, start=0, end=100) -> List[WorkoutOverview]:
         """Return workouts from start till end."""
 
         url = f"{self.garmin_workouts}/workouts"
         logger.debug(f"Requesting workouts from {start}-{end}")
         params = {"start": start, "limit": end}
-        return self.connectapi(url, params=params)
+        response = self.connectapi(url, params=params)
+        
+        if not isinstance(response, list):
+            raise GarminConnectConnectionError(f"Expected list response from {url}, got {type(response)}")
+        
+        return [WorkoutParser.parse_workout_overview(workout_data) for workout_data in response]
 
     def get_workout_by_id(self, workout_id) -> WorkoutDetail:
         """Return workout by id."""
