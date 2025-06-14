@@ -69,7 +69,6 @@ class Claude:
             self.conversation_history.append({"role": "assistant", "content": response.content})
             
             # Second pass: process all tool_uses together
-            current_use_workouts = []
             if tool_uses:
                 tool_results = []
                 for tool_use in tool_uses:
