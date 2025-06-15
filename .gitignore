@@ -1,5 +1,6 @@
 # Project specific
 cookies.txt
+tokenstore
 
 # Python
 __pycache__/
