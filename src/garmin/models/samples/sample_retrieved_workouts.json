@@ -1,7 +1,7 @@
 [
     {
         "workoutId": 1237685490,
-        "ownerId": 77692629,
+        "ownerId": 0,
         "workoutName": "Easy 5K Run",
         "description": null,
         "updateDate": "2025-06-08T21:08:31.0",
@@ -48,7 +48,7 @@
     },
     {
         "workoutId": 1237515989,
-        "ownerId": 77692629,
+        "ownerId": 0,
         "workoutName": "Run Workout",
         "description": null,
         "updateDate": "2025-06-08T19:55:39.0",
@@ -95,7 +95,7 @@
     },
     {
         "workoutId": 897566971,
-        "ownerId": 77692629,
+        "ownerId": 0,
         "workoutName": "(40 min total) 15 min vo2",
         "description": null,
         "updateDate": "2024-04-28T19:11:04.0",
@@ -142,7 +142,7 @@
     },
     {
         "workoutId": 897566779,
-        "ownerId": 77692629,
+        "ownerId": 0,
         "workoutName": "(34 min total) 12 min vo2",
         "description": null,
         "updateDate": "2024-04-28T19:08:12.0",
@@ -189,7 +189,7 @@
     },
     {
         "workoutId": 897561002,
-        "ownerId": 77692629,
+        "ownerId": 0,
         "workoutName": "(1 hour total) 45 minute threshold",
         "description": null,
         "updateDate": "2024-04-28T19:03:23.0",
@@ -236,7 +236,7 @@
     },
     {
         "workoutId": 897557754,
-        "ownerId": 77692629,
+        "ownerId": 0,
         "workoutName": "(45 min total) 30 minute  threshold ",
         "description": "30 minute tempo(threshold)",
         "updateDate": "2024-04-28T19:01:13.0",
@@ -283,7 +283,7 @@
     },
     {
         "workoutId": 897362932,
-        "ownerId": 77692629,
+        "ownerId": 0,
         "workoutName": "Tired Run",
         "description": "Tired Run",
         "updateDate": "2024-04-28T16:09:55.0",
@@ -330,7 +330,7 @@
     },
     {
         "workoutId": 897362936,
-        "ownerId": 77692629,
+        "ownerId": 0,
         "workoutName": "Easy Run",
         "description": "Run at an easy pace.",
         "updateDate": "2024-04-28T16:09:55.0",
@@ -377,7 +377,7 @@
     },
     {
         "workoutId": 897362938,
-        "ownerId": 77692629,
+        "ownerId": 0,
         "workoutName": "Easy Run",
         "description": "Run at an easy pace.",
         "updateDate": "2024-04-28T16:09:55.0",
@@ -424,7 +424,7 @@
     },
     {
         "workoutId": 897362940,
-        "ownerId": 77692629,
+        "ownerId": 0,
         "workoutName": "Easy Run",
         "description": "Run at an easy pace.",
         "updateDate": "2024-04-28T16:09:55.0",
@@ -471,7 +471,7 @@
     },
     {
         "workoutId": 897362941,
-        "ownerId": 77692629,
+        "ownerId": 0,
         "workoutName": "Run",
         "description": "Run continuously.",
         "updateDate": "2024-04-28T16:09:55.0",
@@ -518,7 +518,7 @@
     },
     {
         "workoutId": 897181152,
-        "ownerId": 77692629,
+        "ownerId": 0,
         "workoutName": "Benchmark Run",
         "description": "Warm up, run and walk with strong effort, cool down.",
         "updateDate": "2024-04-28T13:12:13.0",
@@ -565,7 +565,7 @@
     },
     {
         "workoutId": 758895721,
-        "ownerId": 77692629,
+        "ownerId": 0,
         "workoutName": "10 mi aerobic",
         "description": null,
         "updateDate": "2023-10-11T20:35:00.0",
@@ -612,7 +612,7 @@
     },
     {
         "workoutId": 609284976,
-        "ownerId": 77692629,
+        "ownerId": 0,
         "workoutName": "continuous hills 4x5",
         "description": null,
         "updateDate": "2023-01-28T15:22:20.0",
