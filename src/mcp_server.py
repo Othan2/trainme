@@ -53,6 +53,15 @@ def get_activities(
     )
 
 
+@mcp.resource(
+    uri="data://user_profile",
+    description="Get the user profile from Garmin Connect containing personal metrics and settings.",
+    mime_type="application/json",
+)
+def get_user_profile() -> dict:
+    profile = Garmin.get_instance().get_user_profile()
+    return profile.model_dump()
+
 @mcp.tool
 def create_workout(w: WorkoutDetailType) -> str:
     return str(w)
