@@ -313,8 +313,6 @@ class WorkoutDetail(ABC, BaseModel):
     training_plan_id: Optional[str] = Field(default=None, description="Unique identifier of the training plan.")
     is_wheelchair: bool = False
     
-
-    
     @abstractmethod
     def to_dict(self) -> Dict[str, Any]:
         """Convert the workout to a dictionary representation for Garmin API calls"""
