@@ -28,11 +28,8 @@ try:
 except FileNotFoundError:
     pass
 
-# Initialize Garmin with token if available
-garmin = Garmin(email, password, tokens=tokens)
-
 # Login (will use existing token if valid, or get new token if needed)
-tokens = garmin.login()
+tokens = Garmin(email, password, tokens=tokens).login()
 
 # Save token to tokenstore file
 with open("tokenstore", "w") as f:
