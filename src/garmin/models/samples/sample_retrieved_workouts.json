@@ -107,12 +107,12 @@
         },
         "trainingPlanId": null,
         "author": {
-            "userProfilePk": 77692629,
-            "displayName": "6dba7c91-be9f-4476-8af6-83814303424b",
-            "fullName": "Owen Boyd",
+            "userProfilePk": 12345,
+            "displayName": "sample-user-uuid",
+            "fullName": "John Doe",
             "profileImgNameLarge": null,
-            "profileImgNameMedium": "94d7f05b-9af7-4eb9-986a-95dc90516bee-77692629.png",
-            "profileImgNameSmall": "3bcb55f6-73c9-4e64-9708-a97cf47aa152-77692629.png",
+            "profileImgNameMedium": "sample-medium-12345.png",
+            "profileImgNameSmall": "sample-small-12345.png",
             "userPro": false,
             "vivokidUser": false
         },
