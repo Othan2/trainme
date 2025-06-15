@@ -22,7 +22,7 @@ class Garmin:
     _initialized = False
 
     def __init__(
-        self, email: str, password: str, is_cn=False, prompt_mfa=None, return_on_mfa=False
+        self, email: str, password: str, is_cn=False, prompt_mfa=None, return_on_mfa=False, tokens: Optional[str] = None
     ):
         """Create a new class instance."""
         if self._initialized:
@@ -33,6 +33,7 @@ class Garmin:
         self.is_cn = is_cn
         self.prompt_mfa = prompt_mfa
         self.return_on_mfa = return_on_mfa
+        self.tokens : Optional[str] = tokens
 
         # URLs used multiple times across methods
         self.garmin_connect_user_settings_url = "/userprofile-service/userprofile/user-settings"
@@ -57,7 +58,6 @@ class Garmin:
         self.display_name = None
         self.full_name = None
         self.unit_system = None
-        self.login()
         self._initialized = True
         Garmin._instance = self
 
@@ -90,35 +90,22 @@ class Garmin:
     def download(self, path, **kwargs):
         return self.garth.download(path, **kwargs)
 
-    def login(self, /, tokenstore: Optional[str] = None):
+    def login(self, /, tokenstore: Optional[str] = None) -> str:
         """Log in using Garth."""
-        # tokenstore = tokenstore or os.getenv("GARMINTOKENS")
-
-        # if tokenstore:
-        #     if len(tokenstore) > 512:
-        #         self.garth.loads(tokenstore)
-        #     else:
-        #         self.garth.load(tokenstore)
-
-        #     self.display_name = self.garth.profile["displayName"]
-        #     self.full_name = self.garth.profile["fullName"]
-
-        #     settings = self.garth.connectapi(self.garmin_connect_user_settings_url)
-        #     if not settings or not isinstance(settings, dict):
-        #         raise GarminConnectConnectionError(f"Expected dict response from user settings API, got {type(settings)}")
-        #     self.unit_system = settings["userData"]["measurementSystem"]
-
-        #     return None, None
-        # else:
-        if self.return_on_mfa:
-            self.garth.login(
-                self.username, self.password, return_on_mfa=self.return_on_mfa
-            )
+        if self.tokens:
+            self.garth.loads(self.tokens)
         else:
-            self.garth.login(
-                self.username, self.password, prompt_mfa=self.prompt_mfa
-            )
-            
+            if self.return_on_mfa:
+                self.garth.login(
+                    self.username, self.password, return_on_mfa=self.return_on_mfa
+                )
+            else:
+                self.garth.login(
+                    self.username, self.password, prompt_mfa=self.prompt_mfa
+                )
+                
+        self.tokens = self.garth.dumps()
+
         self.display_name = self.garth.profile["displayName"]
         self.full_name = self.garth.profile["fullName"]
         if not self.display_name or not self.full_name:
@@ -130,6 +117,8 @@ class Garmin:
         if not settings or not isinstance(settings, dict):
             raise GarminConnectConnectionError(f"Expected dict response from user settings API, got {type(settings)}")
         self.unit_system = settings["userData"]["measurementSystem"]
+        
+        return self.tokens
 
 
     def resume_login(self,client_state: dict, mfa_code: str):

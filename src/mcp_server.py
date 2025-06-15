@@ -19,7 +19,24 @@ email = os.getenv("GARMIN_EMAIL")
 password = os.getenv("GARMIN_PASSWORD")
 assert email is not None, ("Garmin email is required to use this server.")
 assert password is not None, ("Garmin password is required to use this server.")
-Garmin(email, password)
+
+# Try to read existing token from tokenstore
+tokens = None
+try:
+    with open("tokenstore", "r") as f:
+        tokens = f.read().strip()
+except FileNotFoundError:
+    pass
+
+# Initialize Garmin with token if available
+garmin = Garmin(email, password, tokens=tokens)
+
+# Login (will use existing token if valid, or get new token if needed)
+tokens = garmin.login()
+
+# Save token to tokenstore file
+with open("tokenstore", "w") as f:
+    f.write(tokens)
 
 @mcp.tool
 def get_activities(start: int = 0, limit: int = 20, activitytype: Optional[str] = None) -> list[dict]:
