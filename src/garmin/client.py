@@ -10,7 +10,7 @@ import garth
 from .fit import FitEncoderWeight
 
 from .models.workout import WorkoutDetail, WorkoutOverview
-from .parser import WorkoutParser
+from .workout_parser import WorkoutParser
 
 logger = logging.getLogger(__name__)
 

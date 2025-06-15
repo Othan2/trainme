@@ -4,6 +4,7 @@ from .models.workout import (
     EndConditionType, 
     EndCondition,
     IntensityTarget,
+    IntensityTargetType,
     NoTarget,
     CadenceTarget,
     HeartRateZoneTarget,
@@ -53,10 +54,10 @@ class WorkoutParser:
         }
         
         condition_type = condition_map.get(condition_key, EndConditionType.LAP_BUTTON)
-        return EndCondition(condition_type, value, displayable)
+        return EndCondition(condition_type=condition_type, value=value, displayable=displayable)
     
     @staticmethod
-    def _parse_intensity_target(step_data: Dict[str, Any]) -> IntensityTarget:
+    def _parse_intensity_target(step_data: Dict[str, Any]) -> IntensityTargetType:
         """Parse JSON target type to IntensityTarget object"""
         target_data = step_data.get("targetType", {})
         target_key = target_data.get("workoutTargetTypeKey")
@@ -67,18 +68,18 @@ class WorkoutParser:
             lower = step_data.get("targetValueOne")
             upper = step_data.get("targetValueTwo") 
             if lower is not None and upper is not None:
-                return CadenceTarget(lower, upper)
+                return CadenceTarget(lower_bound=lower, upper_bound=upper)
             return NoTarget()
         elif target_key == "heart.rate.zone":
             zone = step_data.get("zoneNumber")
             if zone is not None:
-                return HeartRateZoneTarget(zone)
+                return HeartRateZoneTarget(zone_number=zone)
             return NoTarget()
         elif target_key == "pace.zone":
             upper = step_data.get("targetValueOne")
             lower = step_data.get("targetValueTwo")
             if lower is not None and upper is not None:
-                return PaceZoneTarget(lower, upper)
+                return PaceZoneTarget(lower_bound=lower, upper_bound=upper)
             return NoTarget()
         
         return NoTarget()
@@ -91,7 +92,7 @@ class WorkoutParser:
         end_condition = WorkoutParser._parse_end_condition(step_data)
         intensity = WorkoutParser._parse_intensity_target(step_data)
         
-        return WorkoutStep(step_order, step_type, end_condition, intensity)
+        return WorkoutStep(step_order=step_order, step_type=step_type, end_condition=end_condition, intensity=intensity)
     
     @staticmethod
     def _parse_workout_segment(segment_data: Dict[str, Any]) -> WorkoutSegment:
@@ -105,7 +106,7 @@ class WorkoutParser:
                 workout_step = WorkoutParser._parse_workout_step(step_data)
                 workout_steps.append(workout_step)
         
-        return WorkoutSegment(segment_order, sport_type, workout_steps)
+        return WorkoutSegment(segment_order=segment_order, sport_type=sport_type, workout_steps=workout_steps)
     
     @staticmethod
     def _parse_author(author_data: Dict[str, Any]) -> Author:
@@ -138,7 +139,7 @@ class WorkoutParser:
             segment = WorkoutParser._parse_workout_segment(segment_data)
             workout_segments.append(segment)
         
-        return RunWorkout(workout_name, workout_segments, training_plan_id)
+        return RunWorkout(workout_name=workout_name, workout_segments=workout_segments, training_plan_id=training_plan_id)
     
     @staticmethod
     def parse_workout_overview(overview_json: Dict[str, Any]) -> WorkoutOverview:
