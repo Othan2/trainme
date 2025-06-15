@@ -11,6 +11,8 @@ from .fit import FitEncoderWeight
 
 from .models.workout import WorkoutDetail, WorkoutOverview
 from .workout_parser import WorkoutParser
+from .models.user_profile import UserProfile
+from .user_profile_parser import UserProfileParser
 
 logger = logging.getLogger(__name__)
 
@@ -1362,13 +1364,17 @@ class Garmin:
 
         return self.connectapi(url)
 
-    def get_user_profile(self):
+    def get_user_profile(self) -> UserProfile:
         """Get all users settings."""
 
         url = self.garmin_connect_user_settings_url
         logger.debug("Requesting user profile.")
 
-        return self.connectapi(url)
+        response = self.connectapi(url)
+        if not isinstance(response, dict):
+            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+        
+        return UserProfileParser.parse_user_profile(response)
 
     def get_userprofile_settings(self):
         """Get user settings."""
