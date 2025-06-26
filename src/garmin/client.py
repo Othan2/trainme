@@ -2,6 +2,7 @@
 
 import logging
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, datetime, timezone
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional
@@ -13,18 +14,38 @@ from .models.workout import WorkoutDetail, WorkoutOverview
 from .workout_parser import WorkoutParser
 from .models.user_profile import UserProfile
 from .user_profile_parser import UserProfileParser
+from .models.user_fitness_data import (
+    UserFitnessData,
+    BodyBatteryData,
+    SleepData,
+    HeartRateData,
+    StressData,
+    TrainingReadinessData,
+    EnduranceData,
+    RacePredictionData,
+    MaxMetricsData,
+    TrainingStatusData,
+    GoalsData,
+)
+from .user_fitness_data_parser import UserFitnessDataParser
 
 logger = logging.getLogger(__name__)
 
 
 class Garmin:
     """Class for fetching data from Garmin Connect."""
-    
+
     _instance = None
     _initialized = False
 
     def __init__(
-        self, email: str, password: str, is_cn=False, prompt_mfa=None, return_on_mfa=False, tokens: Optional[str] = None
+        self,
+        email: str,
+        password: str,
+        is_cn=False,
+        prompt_mfa=None,
+        return_on_mfa=False,
+        tokens: Optional[str] = None,
     ):
         """Create a new class instance."""
         if self._initialized:
@@ -35,17 +56,31 @@ class Garmin:
         self.is_cn = is_cn
         self.prompt_mfa = prompt_mfa
         self.return_on_mfa = return_on_mfa
-        self.tokens : Optional[str] = tokens
+        self.tokens: Optional[str] = tokens
 
         # URLs used multiple times across methods
-        self.garmin_connect_user_settings_url = "/userprofile-service/userprofile/user-settings"
+        self.garmin_connect_user_settings_url = (
+            "/userprofile-service/userprofile/user-settings"
+        )
         self.garmin_connect_weight_url = "/weight-service"
-        self.garmin_connect_set_blood_pressure_endpoint = "/bloodpressure-service/bloodpressure"
-        self.garmin_connect_endurance_score_url = "/metrics-service/metrics/endurancescore"
-        self.garmin_connect_race_predictor_url = "/metrics-service/metrics/racepredictions"
-        self.garmin_connect_user_summary_chart = "/wellness-service/wellness/dailySummaryChart"
-        self.garmin_connect_daily_intensity_minutes = "/wellness-service/wellness/daily/im"
-        self.garmin_connect_activities = "/activitylist-service/activities/search/activities"
+        self.garmin_connect_set_blood_pressure_endpoint = (
+            "/bloodpressure-service/bloodpressure"
+        )
+        self.garmin_connect_endurance_score_url = (
+            "/metrics-service/metrics/endurancescore"
+        )
+        self.garmin_connect_race_predictor_url = (
+            "/metrics-service/metrics/racepredictions"
+        )
+        self.garmin_connect_user_summary_chart = (
+            "/wellness-service/wellness/dailySummaryChart"
+        )
+        self.garmin_connect_daily_intensity_minutes = (
+            "/wellness-service/wellness/daily/im"
+        )
+        self.garmin_connect_activities = (
+            "/activitylist-service/activities/search/activities"
+        )
         self.garmin_connect_activities_baseurl = "/activitylist-service/activities/"
         self.garmin_connect_activity = "/activity-service/activity"
         self.garmin_connect_gear = "/gear-service/gear/filterGear"
@@ -64,10 +99,12 @@ class Garmin:
         Garmin._instance = self
 
     @classmethod
-    def get_instance(cls) -> 'Garmin':
+    def get_instance(cls) -> "Garmin":
         """Get singleton instance of Garmin client."""
         if cls._instance is None:
-            raise GarminConnectConnectionError("Failed to retrieve Garmin singleton. Ensure the object is initialized before calling get_instance()")
+            raise GarminConnectConnectionError(
+                "Failed to retrieve Garmin singleton. Ensure the object is initialized before calling get_instance()"
+            )
         return cls._instance
 
     def __enter__(self):
@@ -86,7 +123,9 @@ class Garmin:
         """
         result = self.garth.connectapi(path, **kwargs)
         if result is None:
-            raise GarminConnectConnectionError(f"No data returned from API endpoint: {path}")
+            raise GarminConnectConnectionError(
+                f"No data returned from API endpoint: {path}"
+            )
         return result
 
     def download(self, path, **kwargs):
@@ -105,7 +144,7 @@ class Garmin:
                 self.garth.login(
                     self.username, self.password, prompt_mfa=self.prompt_mfa
                 )
-                
+
         self.tokens = self.garth.dumps()
 
         self.display_name = self.garth.profile["displayName"]
@@ -117,13 +156,14 @@ class Garmin:
 
         settings = self.garth.connectapi(self.garmin_connect_user_settings_url)
         if not settings or not isinstance(settings, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from user settings API, got {type(settings)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from user settings API, got {type(settings)}"
+            )
         self.unit_system = settings["userData"]["measurementSystem"]
-        
+
         return self.tokens
 
-
-    def resume_login(self,client_state: dict, mfa_code: str):
+    def resume_login(self, client_state: dict, mfa_code: str):
         """Resume login using Garth."""
         result1, result2 = self.garth.resume_login(client_state, mfa_code)
 
@@ -132,7 +172,9 @@ class Garmin:
 
         settings = self.garth.connectapi(self.garmin_connect_user_settings_url)
         if not settings or not isinstance(settings, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from user settings API, got {type(settings)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from user settings API, got {type(settings)}"
+            )
         self.unit_system = settings["userData"]["measurementSystem"]
 
         return result1, result2
@@ -157,7 +199,9 @@ class Garmin:
         response = self.connectapi(url, params=params)
 
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
 
         if response["privacyProtected"] is True:
             raise GarminConnectAuthenticationError("Authentication error")
@@ -206,9 +250,7 @@ class Garmin:
             **self.get_body_composition(cdate)["totalAverage"],
         }
 
-    def get_body_composition(
-        self, startdate: str, enddate=None
-    ) -> Dict[str, Any]:
+    def get_body_composition(self, startdate: str, enddate=None) -> Dict[str, Any]:
         """
         Return available body composition data for 'startdate' format
         'YYYY-MM-DD' through enddate 'YYYY-MM-DD'.
@@ -222,7 +264,9 @@ class Garmin:
 
         response = self.connectapi(url, params=params)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def add_body_composition(
@@ -269,9 +313,7 @@ class Garmin:
         }
         return self.garth.post("connectapi", url, files=files, api=True)
 
-    def add_weigh_in(
-        self, weight: int, unitKey: str = "kg", timestamp: str = ""
-    ):
+    def add_weigh_in(self, weight: int, unitKey: str = "kg", timestamp: str = ""):
         """Add a weigh-in (default to kg)"""
 
         url = f"{self.garmin_connect_weight_url}/user-weight"
@@ -301,11 +343,7 @@ class Garmin:
         url = f"{self.garmin_connect_weight_url}/user-weight"
 
         # Validate and format the timestamps
-        dt = (
-            datetime.fromisoformat(dateTimestamp)
-            if dateTimestamp
-            else datetime.now()
-        )
+        dt = datetime.fromisoformat(dateTimestamp) if dateTimestamp else datetime.now()
         dtGMT = (
             datetime.fromisoformat(gmtTimestamp)
             if gmtTimestamp
@@ -345,7 +383,9 @@ class Garmin:
 
         response = self.connectapi(url, params=params)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def delete_weigh_in(self, weight_pk: str, cdate: str):
@@ -384,12 +424,9 @@ class Garmin:
 
         return len(weigh_ins)
 
-    def get_body_battery(
-        self, startdate: str, enddate=None
-    ) -> List[Dict[str, Any]]:
+    def get_body_battery(self, startdate: str, enddate=None) -> BodyBatteryData:
         """
-        Return body battery values by day for 'startdate' format
-        'YYYY-MM-DD' through enddate 'YYYY-MM-DD'
+        Return body battery data for 'startdate' format 'YYYY-MM-DD'
         """
 
         if enddate is None:
@@ -399,9 +436,9 @@ class Garmin:
         logger.debug("Requesting body battery data")
 
         result = self.connectapi(url, params=params)
-        if isinstance(result, list):
-            return result
-        return []
+        logger.debug(f"Body battery response: {result}")
+        body_battery_raw = result if isinstance(result, list) else []
+        return UserFitnessDataParser.parse_body_battery(body_battery_raw)
 
     def get_body_battery_events(self, cdate: str) -> List[Dict[str, Any]]:
         """
@@ -447,9 +484,7 @@ class Garmin:
 
         return self.garth.post("connectapi", url, json=payload)
 
-    def get_blood_pressure(
-        self, startdate: str, enddate=None
-    ) -> Dict[str, Any]:
+    def get_blood_pressure(self, startdate: str, enddate=None) -> Dict[str, Any]:
         """
         Returns blood pressure by day for 'startdate' format
         'YYYY-MM-DD' through enddate 'YYYY-MM-DD'
@@ -463,7 +498,9 @@ class Garmin:
 
         response = self.connectapi(url, params=params)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def delete_blood_pressure(self, version: str, cdate: str):
@@ -478,16 +515,19 @@ class Garmin:
             api=True,
         )
 
-    def get_max_metrics(self, cdate: str) -> Dict[str, Any]:
+    def get_max_metrics(self, cdate: str) -> MaxMetricsData:
         """Return available max metric data for 'cdate' format 'YYYY-MM-DD'."""
 
         url = f"/metrics-service/metrics/maxmet/latest/{cdate}"
         logger.debug("Requesting max metrics")
 
         response = self.connectapi(url)
+        logger.debug(f"Max metrics response: {response}")
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
-        return response
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
+        return UserFitnessDataParser.parse_max_metrics_data(response)
 
     def add_hydration_data(
         self, value_in_ml: float, timestamp=None, cdate: Optional[str] = None
@@ -536,7 +576,9 @@ class Garmin:
 
         response = self.connectapi(url)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def get_respiration_data(self, cdate: str) -> Dict[str, Any]:
@@ -547,7 +589,9 @@ class Garmin:
 
         response = self.connectapi(url)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def get_spo2_data(self, cdate: str) -> Dict[str, Any]:
@@ -558,7 +602,9 @@ class Garmin:
 
         response = self.connectapi(url)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def get_intensity_minutes_data(self, cdate: str) -> Dict[str, Any]:
@@ -569,19 +615,24 @@ class Garmin:
 
         response = self.connectapi(url)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
-    def get_all_day_stress(self, cdate: str) -> Dict[str, Any]:
+    def get_all_day_stress(self, cdate: str) -> StressData:
         """Return available all day stress data 'cdate' format 'YYYY-MM-DD'."""
 
         url = f"/wellness-service/wellness/dailyStress/{cdate}"
         logger.debug("Requesting all day stress data")
 
         response = self.connectapi(url)
+        logger.debug(f"All day stress response: {response}")
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
-        return response
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
+        return UserFitnessDataParser.parse_stress_data(response)
 
     def get_all_day_events(self, cdate: str) -> Dict[str, Any]:
         """
@@ -594,7 +645,9 @@ class Garmin:
 
         response = self.connectapi(url)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def get_personal_record(self) -> Dict[str, Any]:
@@ -605,7 +658,9 @@ class Garmin:
 
         response = self.connectapi(url)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def get_earned_badges(self) -> Dict[str, Any]:
@@ -616,7 +671,9 @@ class Garmin:
 
         response = self.connectapi(url)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def get_adhoc_challenges(self, start, limit) -> Dict[str, Any]:
@@ -628,7 +685,9 @@ class Garmin:
 
         response = self.connectapi(url, params=params)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def get_badge_challenges(self, start, limit) -> Dict[str, Any]:
@@ -640,7 +699,9 @@ class Garmin:
 
         response = self.connectapi(url, params=params)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def get_available_badge_challenges(self, start, limit) -> Dict[str, Any]:
@@ -652,12 +713,12 @@ class Garmin:
 
         response = self.connectapi(url, params=params)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
-    def get_non_completed_badge_challenges(
-        self, start, limit
-    ) -> Dict[str, Any]:
+    def get_non_completed_badge_challenges(self, start, limit) -> Dict[str, Any]:
         """Return badge non-completed challenges for current user."""
 
         url = "/badgechallenge-service/badgeChallenge/non-completed"
@@ -666,12 +727,12 @@ class Garmin:
 
         response = self.connectapi(url, params=params)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
-    def get_inprogress_virtual_challenges(
-        self, start, limit
-    ) -> Dict[str, Any]:
+    def get_inprogress_virtual_challenges(self, start, limit) -> Dict[str, Any]:
         """Return in-progress virtual challenges for current user."""
 
         url = "/badgechallenge-service/virtualChallenge/inProgress"
@@ -680,10 +741,12 @@ class Garmin:
 
         response = self.connectapi(url, params=params)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
-    def get_sleep_data(self, cdate: str) -> Dict[str, Any]:
+    def get_sleep_data(self, cdate: str) -> SleepData:
         """Return sleep data for current user."""
 
         url = f"/wellness-service/wellness/dailySleepData/{self.display_name}"
@@ -691,9 +754,12 @@ class Garmin:
         logger.debug("Requesting sleep data")
 
         response = self.connectapi(url, params=params)
+        logger.debug(f"Sleep data response: {response}")
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
-        return response
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
+        return UserFitnessDataParser.parse_sleep_data(response)
 
     def get_stress_data(self, cdate: str) -> Dict[str, Any]:
         """Return stress data for current user."""
@@ -703,7 +769,9 @@ class Garmin:
 
         response = self.connectapi(url)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def get_rhr_day(self, cdate: str) -> Dict[str, Any]:
@@ -719,7 +787,9 @@ class Garmin:
 
         response = self.connectapi(url, params=params)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def get_hrv_data(self, cdate: str) -> Dict[str, Any]:
@@ -730,21 +800,33 @@ class Garmin:
 
         response = self.connectapi(url)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
-    def get_training_readiness(self, cdate: str) -> List[Any]:
+    def get_heart_rate_data(self, cdate: str) -> HeartRateData:
+        """Return combined heart rate and HRV data."""
+        rhr_data = self.get_rhr_day(cdate)
+        hrv_data = self.get_hrv_data(cdate)
+        logger.debug(f"Heart rate data - RHR: {rhr_data}, HRV: {hrv_data}")
+        return UserFitnessDataParser.parse_heart_rate_data(rhr_data, hrv_data)
+
+    def get_training_readiness(self, cdate: str) -> TrainingReadinessData:
         """Return training readiness data for current user."""
 
         url = f"/metrics-service/metrics/trainingreadiness/{cdate}"
         logger.debug("Requesting training readiness data")
 
         response = self.connectapi(url)
+        logger.debug(f"Training readiness response: {response}")
         if not isinstance(response, list):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
-        return response
+            raise GarminConnectConnectionError(
+                f"Expected list response from {url}, got {type(response)}"
+            )
+        return UserFitnessDataParser.parse_training_readiness(response)
 
-    def get_endurance_score(self, startdate: str, enddate=None):
+    def get_endurance_score(self, startdate: str, enddate=None) -> EnduranceData:
         """
         Return endurance score by day for 'startdate' format 'YYYY-MM-DD'
         through enddate 'YYYY-MM-DD'.
@@ -757,7 +839,7 @@ class Garmin:
             params = {"calendarDate": str(startdate)}
             logger.debug("Requesting endurance score data for a single day")
 
-            return self.connectapi(url, params=params)
+            response = self.connectapi(url, params=params)
         else:
             url = f"{self.garmin_connect_endurance_score_url}/stats"
             params = {
@@ -767,9 +849,15 @@ class Garmin:
             }
             logger.debug("Requesting endurance score data for a range of days")
 
-            return self.connectapi(url, params=params)
+            response = self.connectapi(url, params=params)
 
-    def get_race_predictions(self, startdate=None, enddate=None, _type=None):
+        logger.debug(f"Endurance score response: {response}")
+        endurance_raw = response if isinstance(response, dict) else {}
+        return UserFitnessDataParser.parse_endurance_data(endurance_raw)
+
+    def get_race_predictions(
+        self, startdate=None, enddate=None, _type=None
+    ) -> RacePredictionData:
         """
         Return race predictions for the 5k, 10k, half marathon and marathon.
         Accepts either 0 parameters or all three:
@@ -790,39 +878,39 @@ class Garmin:
 
         if _type is None and startdate is None and enddate is None:
             url = (
-                self.garmin_connect_race_predictor_url
-                + f"/latest/{self.display_name}"
+                self.garmin_connect_race_predictor_url + f"/latest/{self.display_name}"
             )
-            return self.connectapi(url)
+            response = self.connectapi(url)
 
-        elif (
-            _type is not None and startdate is not None and enddate is not None
-        ):
+        elif _type is not None and startdate is not None and enddate is not None:
             url = (
-                self.garmin_connect_race_predictor_url
-                + f"/{_type}/{self.display_name}"
+                self.garmin_connect_race_predictor_url + f"/{_type}/{self.display_name}"
             )
             params = {
                 "fromCalendarDate": str(startdate),
                 "toCalendarDate": str(enddate),
             }
-            return self.connectapi(url, params=params)
+            response = self.connectapi(url, params=params)
 
         else:
-            raise ValueError(
-                "You must either provide all parameters or no parameters"
-            )
+            raise ValueError("You must either provide all parameters or no parameters")
 
-    def get_training_status(self, cdate: str) -> Dict[str, Any]:
+        logger.debug(f"Race predictions response: {response}")
+        return UserFitnessDataParser.parse_race_predictions(response)
+
+    def get_training_status(self, cdate: str) -> TrainingStatusData:
         """Return training status data for current user."""
 
         url = f"/metrics-service/metrics/trainingstatus/aggregated/{cdate}"
         logger.debug("Requesting training status data")
 
         response = self.connectapi(url)
+        logger.debug(f"Training status response: {response}")
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
-        return response
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
+        return UserFitnessDataParser.parse_training_status(response)
 
     def get_fitnessage_data(self, cdate: str) -> Dict[str, Any]:
         """Return Fitness Age data for current user."""
@@ -832,7 +920,9 @@ class Garmin:
 
         response = self.connectapi(url)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def get_hill_score(self, startdate: str, enddate=None):
@@ -867,8 +957,10 @@ class Garmin:
         response = self.connectapi(url)
         logger.debug(response)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
-        return response.get('devices', [])
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
+        return response.get("devices", [])
 
     def get_device_settings(self, device_id: str) -> Dict[str, Any]:
         """Return device settings for device with 'device_id'."""
@@ -878,7 +970,9 @@ class Garmin:
 
         response = self.connectapi(url)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def get_primary_training_device(self) -> Dict[str, Any]:
@@ -891,7 +985,9 @@ class Garmin:
 
         response = self.connectapi(url)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         return response
 
     def get_device_solar_data(
@@ -910,9 +1006,13 @@ class Garmin:
 
         response = self.connectapi(url, params=params)
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
         if "deviceSolarInput" not in response:
-            raise GarminConnectConnectionError(f"Expected 'deviceSolarInput' key in response from {url}")
+            raise GarminConnectConnectionError(
+                f"Expected 'deviceSolarInput' key in response from {url}"
+            )
         return response["deviceSolarInput"]
 
     def get_device_alarms(self) -> List[Any]:
@@ -937,7 +1037,9 @@ class Garmin:
 
         return self.connectapi(url)
 
-    def get_activities(self, start: int = 0, limit: int = 20, activitytype: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_activities(
+        self, start: int = 0, limit: int = 20, activitytype: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """
         Return available activities.
         :param start: Starting activity offset, where 0 means the most recent activity
@@ -972,9 +1074,7 @@ class Garmin:
 
         return self.garth.put("connectapi", url, json=payload, api=True)
 
-    def set_activity_type(
-        self, activity_id, type_id, type_key, parent_type_id
-    ):
+    def set_activity_type(self, activity_id, type_id, type_key, parent_type_id):
         url = f"{self.garmin_connect_activity}/{activity_id}"
         payload = {
             "activityId": activity_id,
@@ -1104,9 +1204,7 @@ class Garmin:
         if sortorder:
             params["sortOrder"] = str(sortorder)
 
-        logger.debug(
-            f"Requesting activities by date from {startdate} to {enddate}"
-        )
+        logger.debug(f"Requesting activities by date from {startdate} to {enddate}")
         while True:
             params["start"] = str(start)
             logger.debug(f"Requesting activities {start} to {start+limit}")
@@ -1141,9 +1239,7 @@ class Garmin:
             "metric": str(metric),
         }
 
-        logger.debug(
-            f"Requesting fitnessstats by date from {startdate} to {enddate}"
-        )
+        logger.debug(f"Requesting fitnessstats by date from {startdate} to {enddate}")
         return self.connectapi(url, params=params)
 
     def get_activity_types(self):
@@ -1151,7 +1247,7 @@ class Garmin:
         logger.debug("Requesting activity types")
         return self.connectapi(url)
 
-    def get_goals(self, status="active", start=1, limit=30):
+    def get_goals(self, status="active", start=1, limit=30) -> GoalsData:
         """
         Fetch all goals based on status
         :param status: Status of goals (valid options are "active", "future", or "past")
@@ -1160,10 +1256,10 @@ class Garmin:
         :type start: int
         :param limit: Pagination limit when retrieving goals
         :type limit: int
-        :return: list of goals in JSON format
+        :return: GoalsData object with parsed goals
         """
 
-        goals = []
+        goals: List[Dict[str, Any]] = []
         url = "/goal-service/goal/goals"
         params = {
             "status": status,
@@ -1175,17 +1271,17 @@ class Garmin:
         logger.debug(f"Requesting {status} goals")
         while True:
             params["start"] = str(start)
-            logger.debug(
-                f"Requesting {status} goals {start} to {start + limit - 1}"
-            )
+            logger.debug(f"Requesting {status} goals {start} to {start + limit - 1}")
             goals_json = self.connectapi(url, params=params)
             if goals_json:
-                goals.extend(goals_json)
+                logger.debug(f"Goals response: {goals_json}")
+                if isinstance(goals_json, list):
+                    goals.extend(goals_json)
                 start = start + limit
             else:
                 break
 
-        return goals
+        return UserFitnessDataParser.parse_goals_data(goals)
 
     def get_gear(self, userProfileNumber):
         """Return all user gear."""
@@ -1230,9 +1326,7 @@ class Garmin:
         GPX = auto()
         TCX = auto()
 
-    def download_activity(
-        self, activity_id, dl_fmt=ActivityDownloadFormat.TCX
-    ):
+    def download_activity(self, activity_id, dl_fmt=ActivityDownloadFormat.TCX):
         """
         Downloads activity in requested format and returns the raw bytes. For
         "Original" will return the zip file content, up to user to extract it.
@@ -1278,9 +1372,7 @@ class Garmin:
 
         activity_id = str(activity_id)
         url = f"{self.garmin_connect_activity}/{activity_id}/split_summaries"
-        logger.debug(
-            "Requesting split summaries for activity id %s", activity_id
-        )
+        logger.debug("Requesting split summaries for activity id %s", activity_id)
 
         return self.connectapi(url)
 
@@ -1298,9 +1390,7 @@ class Garmin:
 
         activity_id = str(activity_id)
         url = f"{self.garmin_connect_activity}/{activity_id}/hrTimeInZones"
-        logger.debug(
-            "Requesting split summaries for activity id %s", activity_id
-        )
+        logger.debug("Requesting split summaries for activity id %s", activity_id)
 
         return self.connectapi(url)
 
@@ -1309,9 +1399,7 @@ class Garmin:
 
         activity_id = str(activity_id)
         url = f"{self.garmin_connect_activity}/{activity_id}"
-        logger.debug(
-            "Requesting activity summary data for activity id %s", activity_id
-        )
+        logger.debug("Requesting activity summary data for activity id %s", activity_id)
 
         return self.connectapi(url)
 
@@ -1333,9 +1421,7 @@ class Garmin:
 
         activity_id = str(activity_id)
         url = f"{self.garmin_connect_activity}/{activity_id}/exerciseSets"
-        logger.debug(
-            "Requesting exercise sets for activity id %s", activity_id
-        )
+        logger.debug("Requesting exercise sets for activity id %s", activity_id)
 
         return self.connectapi(url)
 
@@ -1351,7 +1437,7 @@ class Garmin:
 
         return self.connectapi(url, params=params)
 
-    def get_gear_activities(self, gearUUID, limit = 9999):
+    def get_gear_activities(self, gearUUID, limit=9999):
         """Return activities where gear uuid was used.
         :param gearUUID: UUID of the gear to get activities for
         :param limit: Maximum number of activities to return (default: 9999)
@@ -1371,9 +1457,12 @@ class Garmin:
         logger.debug("Requesting user profile.")
 
         response = self.connectapi(url)
+        logger.debug(f"User profile response: {response}")
         if not isinstance(response, dict):
-            raise GarminConnectConnectionError(f"Expected dict response from {url}, got {type(response)}")
-        
+            raise GarminConnectConnectionError(
+                f"Expected dict response from {url}, got {type(response)}"
+            )
+
         return UserProfileParser.parse_user_profile(response)
 
     def get_userprofile_settings(self):
@@ -1403,17 +1492,24 @@ class Garmin:
         logger.debug(f"Requesting workouts from {start}-{end}")
         params = {"start": start, "limit": end}
         response = self.connectapi(url, params=params)
-        
+        logger.debug(f"Workouts response: {response}")
+
         if not isinstance(response, list):
-            raise GarminConnectConnectionError(f"Expected list response from {url}, got {type(response)}")
-        
-        return [WorkoutParser.parse_workout_overview(workout_data) for workout_data in response]
+            raise GarminConnectConnectionError(
+                f"Expected list response from {url}, got {type(response)}"
+            )
+
+        return [
+            WorkoutParser.parse_workout_overview(workout_data)
+            for workout_data in response
+        ]
 
     def get_workout_by_id(self, workout_id) -> WorkoutDetail:
         """Return workout by id."""
 
         url = f"{self.garmin_workouts}/workout/{workout_id}"
         resp = self.connectapi(url)
+        logger.debug(f"Workout by ID response: {resp}")
         assert isinstance(resp, dict)
         return WorkoutParser.parse_workout(resp)
 
@@ -1432,7 +1528,7 @@ class Garmin:
         logger.debug("Uploading workout using %s", url)
 
         return self.garth.post("connectapi", url, json=workout.to_dict(), api=True)
-    
+
     def get_menstrual_data_for_date(self, fordate: str):
         """Return menstrual data for date."""
 
@@ -1469,6 +1565,103 @@ class Garmin:
         return self.garth.post(
             "connectapi", "graphql-gateway/graphql", json=query
         ).json()
+
+    def get_comprehensive_fitness_data(
+        self, limit_activities: int = 15
+    ) -> UserFitnessData:
+        """
+        Aggregate comprehensive fitness data for training plan generation.
+
+        This method combines multiple Garmin API calls to create a unified fitness
+        data response containing all information needed for training plan generation.
+
+        Args:
+            limit_activities: Number of recent activities to include (default: 15)
+
+        Returns:
+            UserFitnessData: Comprehensive fitness data object
+        """
+        logger.info("Aggregating comprehensive fitness data...")
+        today = date.today().strftime("%Y-%m-%d")
+
+        # Get user profile first - fail fast if this doesn't work
+        try:
+            user_profile = self.get_user_profile()
+        except Exception as e:
+            raise GarminConnectConnectionError(
+                f"Failed to fetch user profile - cannot continue: {e}"
+            )
+
+        # Create fitness data object with user profile and defaults
+        fitness_data = UserFitnessData(
+            generated_at=datetime.now().isoformat(),
+            user_profile=user_profile,
+            training_availability=UserFitnessDataParser.parse_training_availability(
+                user_profile
+            ),
+            notes="Generated by Garmin Connect integration",
+        )
+
+        # Run parallel API calls and update fitness_data directly on success
+        def update_activities():
+            fitness_data.recent_activities = (
+                UserFitnessDataParser.parse_recent_activities_data(
+                    self.get_activities(0, limit_activities), limit_activities
+                )
+            )
+
+        def update_body_battery():
+            fitness_data.body_battery = self.get_body_battery(today)
+
+        def update_sleep():
+            fitness_data.sleep = self.get_sleep_data(today)
+
+        def update_heart_rate():
+            fitness_data.heart_rate = self.get_heart_rate_data(today)
+
+        def update_stress():
+            fitness_data.stress = self.get_all_day_stress(today)
+
+        def update_training_readiness():
+            fitness_data.training_readiness = self.get_training_readiness(today)
+
+        def update_endurance():
+            fitness_data.endurance = self.get_endurance_score(today)
+
+        def update_race_predictions():
+            fitness_data.race_predictions = self.get_race_predictions()
+
+        def update_max_metrics():
+            fitness_data.max_metrics = self.get_max_metrics(today)
+
+        def update_training_status():
+            fitness_data.training_status = self.get_training_status(today)
+
+        def update_goals():
+            fitness_data.goals = self.get_goals("active")
+
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = [
+                executor.submit(update_activities),
+                executor.submit(update_body_battery),
+                executor.submit(update_sleep),
+                executor.submit(update_heart_rate),
+                executor.submit(update_stress),
+                executor.submit(update_training_readiness),
+                executor.submit(update_endurance),
+                executor.submit(update_race_predictions),
+                executor.submit(update_max_metrics),
+                executor.submit(update_training_status),
+                executor.submit(update_goals),
+            ]
+
+            for future in as_completed(futures):
+                try:
+                    future.result()
+                except Exception as e:
+                    logger.warning(f"Failed to fetch fitness data: {e}")
+
+        return fitness_data
 
 
 class GarminConnectConnectionError(Exception):

@@ -5,6 +5,7 @@ import os
 import sys
 from pathlib import Path
 import garth
+from datetime import datetime
 
 from garmin.client import Garmin
 from src.garmin.models.workout import WorkoutDetailType
@@ -62,6 +63,55 @@ def get_user_profile() -> dict:
     profile = Garmin.get_instance().get_user_profile()
     return profile.model_dump()
 
+
+@mcp.resource(
+    uri="data://user_fitness_data",
+    description="Get comprehensive user fitness data including profile, recent activities, fitness metrics, recovery data, and training goals - optimized for training plan generation.",
+    mime_type="application/json",
+)
+def get_user_fitness_data(limit_activities: int = 15) -> dict:
+    """
+    Retrieve comprehensive fitness data that consolidates all user information
+    needed for training plan generation in a single API call.
+
+    This resource aggregates data from multiple Garmin Connect endpoints including:
+    - User profile and preferences
+    - Recent activity history with key metrics
+    - Current fitness metrics (VO2 max, lactate threshold, etc.)
+    - Recovery metrics (body battery, sleep, HRV, stress)
+    - Training load and status
+    - Active goals and objectives
+    - Training availability and preferences
+
+    Args:
+        limit_activities: Number of recent activities to include (default: 15)
+
+    Returns:
+        dict: Comprehensive fitness data in unified format
+    """
+    try:
+        garmin_client = Garmin.get_instance()
+        fitness_data = garmin_client.get_comprehensive_fitness_data(
+            limit_activities=limit_activities
+        )
+        return fitness_data.to_dict()
+    except Exception as e:
+        # Return error information in a structured format
+        return {
+            "error": "Failed to retrieve comprehensive fitness data",
+            "details": str(e),
+            "generatedAt": datetime.now().isoformat(),
+            "userProfile": None,
+            "fitnessMetrics": None,
+            "trainingLoad": None,
+            "recoveryMetrics": None,
+            "recentActivities": [],
+            "activeGoals": [],
+            "trainingAvailability": None,
+            "notes": f"Error occurred during data aggregation: {str(e)}",
+        }
+
+
 @mcp.tool
 def create_workout(w: WorkoutDetailType) -> str:
     try:
@@ -69,7 +119,9 @@ def create_workout(w: WorkoutDetailType) -> str:
         response = garmin_client.upload_workout(w)
         return f"Workout '{w.workout_name}' uploaded successfully to Garmin Connect. Response: {response.status_code}"
     except Exception as e:
-        return f"Failed to upload workout '{w.workout_name}' to Garmin Connect: {str(e)}"
+        return (
+            f"Failed to upload workout '{w.workout_name}' to Garmin Connect: {str(e)}"
+        )
 
 
 if __name__ == "__main__":
