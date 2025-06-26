@@ -1,6 +1,7 @@
 # Project specific
 cookies.txt
 tokenstore
+tools/.server.pid
 
 # Python
 __pycache__/

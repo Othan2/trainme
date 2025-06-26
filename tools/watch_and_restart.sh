@@ -6,35 +6,78 @@
 #   "command": "/Users/owenboyd/projects/trainme/tools/watch_and_restart.sh"
 # }
 
+set -euo pipefail
+
 # Store the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${(%):-%x}")" && pwd)"
+PID_FILE="$SCRIPT_DIR/.server.pid"
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >&2
+}
+
+cleanup() {
+    log "Shutting down..."
+    if [ -f "$PID_FILE" ]; then
+        local pid=$(cat "$PID_FILE")
+        if kill -0 "$pid" 2>/dev/null; then
+            kill "$pid"
+            wait "$pid" 2>/dev/null || true
+        fi
+        rm -f "$PID_FILE"
+    fi
+    pkill -f "fastmcp run" 2>/dev/null || true
+    exit 0
+}
+
+# Set up signal handlers
+trap cleanup INT TERM EXIT
+
+# Check dependencies
+for cmd in fswatch uv; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        log "Error: $cmd is not installed"
+        exit 1
+    fi
+done
 
 # Check if .env file exists
 if [ ! -f "$SCRIPT_DIR/.env" ]; then
-    echo "Error: .env file not found in script dir: $SCRIPT_DIR" >&2
+    log "Error: .env file not found in script dir: $SCRIPT_DIR"
     exit 1
 fi
 
 # Kill any existing server
-pkill -f "fastmcp run"
+pkill -f "fastmcp run" 2>/dev/null || true
 
-source $SCRIPT_DIR/.env
+source "$SCRIPT_DIR/.env"
 
 # Function to start server
 start_server() {
-    cd $SCRIPT_DIR && \
-    GARMIN_EMAIL=$GARMIN_EMAIL GARMIN_PASSWORD=$GARMIN_PASSWORD \
+    if [ -f "$PID_FILE" ]; then
+        local old_pid=$(cat "$PID_FILE")
+        if kill -0 "$old_pid" 2>/dev/null; then
+            kill "$old_pid"
+            wait "$old_pid" 2>/dev/null || true
+        fi
+    fi
+    
+    log "Starting server..."
+    cd "$SCRIPT_DIR"
+    GARMIN_EMAIL="$GARMIN_EMAIL" GARMIN_PASSWORD="$GARMIN_PASSWORD" \
     uv run fastmcp run ../src/mcp_server.py &
-    SERVER_PID=$!
+    
+    echo $! > "$PID_FILE"
+    log "Server started with PID $!"
 }
 
 # Start initial server
 start_server
 
-# Watch for changes
+# Watch for changes with debouncing
+log "Watching ../src/ for changes..."
 fswatch -o ../src/ | while read f; do
-    # Files changed, restarting server...
-    kill $SERVER_PID 2>/dev/null
-    sleep 1
+    log "Files changed, restarting server in 2 seconds..."
+    sleep 2  # Debounce rapid changes
     start_server
 done
