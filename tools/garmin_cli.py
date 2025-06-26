@@ -4,6 +4,7 @@ import os
 import sys
 import json
 import inspect
+import logging
 import readline  # noqa: F401
 from dotenv import load_dotenv
 
@@ -100,6 +101,12 @@ def format_output(result):
 
 
 def main():
+    # Configure logging to show debug messages
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
     load_dotenv()
     email = os.getenv("GARMIN_EMAIL")
     password = os.getenv("GARMIN_PASSWORD")
