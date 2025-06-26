@@ -328,16 +328,16 @@ class TrainingStatusData(BaseModel):
         default=None, description="Training load balance"
     )
     current_training_load: Optional[float] = Field(
-        default=None, description="Current training load"
+        default=None, description="Current training load in minutes"
     )
     optimal_training_load: Optional[str] = Field(
         default=None, description="Optimal training load range"
     )
     acute_load: Optional[float] = Field(
-        default=None, description="Acute training load (7 days)"
+        default=None, description="Acute training load in minutes (7 days)"
     )
     chronic_load: Optional[float] = Field(
-        default=None, description="Chronic training load (28 days)"
+        default=None, description="Chronic training load in minutes (28 days)"
     )
     training_stress_balance: Optional[float] = Field(
         default=None, description="Training stress balance"
@@ -345,13 +345,13 @@ class TrainingStatusData(BaseModel):
 
     # Monthly training load data
     monthly_load_aerobic_low: Optional[float] = Field(
-        default=None, description="Monthly aerobic low training load"
+        default=None, description="Monthly aerobic low training load in minutes"
     )
     monthly_load_aerobic_high: Optional[float] = Field(
-        default=None, description="Monthly aerobic high training load"
+        default=None, description="Monthly aerobic high training load in minutes"
     )
     monthly_load_anaerobic: Optional[float] = Field(
-        default=None, description="Monthly anaerobic training load"
+        default=None, description="Monthly anaerobic training load in minutes"
     )
     monthly_load_aerobic_low_target_min: Optional[int] = Field(
         default=None, description="Monthly aerobic low target minimum"
@@ -371,6 +371,36 @@ class TrainingStatusData(BaseModel):
     monthly_load_anaerobic_target_max: Optional[int] = Field(
         default=None, description="Monthly anaerobic target maximum"
     )
+
+    def __str__(self) -> str:
+        """Human-readable summary of training status"""
+        if not self.training_status:
+            return "No training status data available"
+        
+        lines = [f"Training Status: {self.training_status}"]
+        
+        if self.training_load_balance:
+            lines.append(f"Load Balance: {self.training_load_balance}")
+        
+        # Training loads
+        # load_info = []
+        # if self.acute_load is not None:
+        #     load_info.append(f"Acute (7d): {self.acute_load:.1f}min")
+        # if self.chronic_load is not None:
+        #     load_info.append(f"Chronic (28d): {self.chronic_load:.1f}min")
+        # if self.current_training_load is not None:
+        #     load_info.append(f"Current: {self.current_training_load:.1f}min")
+        
+        # if load_info:
+        #     lines.append(f"Training Load - {', '.join(load_info)}")
+        
+        # if self.training_stress_balance is not None:
+        #     lines.append(f"Training Stress Balance: {self.training_stress_balance:.1f}")
+        
+        # if self.optimal_training_load:
+        #     lines.append(f"Optimal Load Range: {self.optimal_training_load}")
+        
+        return " | ".join(lines)
 
 
 class GoalsData(BaseModel):
@@ -495,7 +525,27 @@ class UserFitnessData(BaseModel):
         if self.max_metrics.vo2_max_value:
             lines.append(f"  VO2 Max Running: {self.max_metrics.vo2_max_value}")
         if self.training_status.training_status:
-            lines.append(f"  Training Status: {self.training_status.training_status}")
+            lines.append(f"  Training Status: {self.training_status}")
+        
+        # Add race predictions
+        race_times = []
+        if self.race_predictions.time_5k_seconds:
+            minutes, seconds = divmod(self.race_predictions.time_5k_seconds, 60)
+            race_times.append(f"5K: {minutes}:{seconds:02d}")
+        if self.race_predictions.time_10k_seconds:
+            minutes, seconds = divmod(self.race_predictions.time_10k_seconds, 60)
+            race_times.append(f"10K: {minutes}:{seconds:02d}")
+        if self.race_predictions.time_half_marathon_seconds:
+            hours, remainder = divmod(self.race_predictions.time_half_marathon_seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            race_times.append(f"Half: {hours}:{minutes:02d}:{seconds:02d}")
+        if self.race_predictions.time_marathon_seconds:
+            hours, remainder = divmod(self.race_predictions.time_marathon_seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            race_times.append(f"Marathon: {hours}:{minutes:02d}:{seconds:02d}")
+        
+        if race_times:
+            lines.append("  Race Predictions:\n    " + '\n    '.join(race_times))
 
         lines.extend(
             [
@@ -514,7 +564,7 @@ class UserFitnessData(BaseModel):
         lines.extend(
             [
                 f"",
-                f"Recent Activities: {len(self.recent_activities.activities)} activities",
+                f"Activities past month: {len(self.recent_activities.activities)} activities",
                 f"Active Goals: {len(self.goals.active_goals)} goals",
                 f"Training Days: {', '.join(self.training_availability.available_training_days) if self.training_availability else 'Not configured'}",
             ]

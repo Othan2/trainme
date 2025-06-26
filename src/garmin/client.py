@@ -3,7 +3,7 @@
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, timedelta
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional
 
@@ -1582,7 +1582,8 @@ class Garmin:
             UserFitnessData: Comprehensive fitness data object
         """
         logger.info("Aggregating comprehensive fitness data...")
-        today = date.today().strftime("%Y-%m-%d")
+        yesterday = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+        week_ago = (date.today() - timedelta(days=7)).strftime("%Y-%m-%d")
 
         # Get user profile first - fail fast if this doesn't work
         try:
@@ -1611,31 +1612,31 @@ class Garmin:
             )
 
         def update_body_battery():
-            fitness_data.body_battery = self.get_body_battery(today)
+            fitness_data.body_battery = self.get_body_battery(yesterday)
 
         def update_sleep():
-            fitness_data.sleep = self.get_sleep_data(today)
+            fitness_data.sleep = self.get_sleep_data(yesterday)
 
         def update_heart_rate():
-            fitness_data.heart_rate = self.get_heart_rate_data(today)
+            fitness_data.heart_rate = self.get_heart_rate_data(yesterday)
 
         def update_stress():
-            fitness_data.stress = self.get_all_day_stress(today)
+            fitness_data.stress = self.get_all_day_stress(yesterday)
 
         def update_training_readiness():
-            fitness_data.training_readiness = self.get_training_readiness(today)
+            fitness_data.training_readiness = self.get_training_readiness(week_ago)
 
         def update_endurance():
-            fitness_data.endurance = self.get_endurance_score(today)
+            fitness_data.endurance = self.get_endurance_score(week_ago)
 
         def update_race_predictions():
             fitness_data.race_predictions = self.get_race_predictions()
 
         def update_max_metrics():
-            fitness_data.max_metrics = self.get_max_metrics(today)
+            fitness_data.max_metrics = self.get_max_metrics(yesterday)
 
         def update_training_status():
-            fitness_data.training_status = self.get_training_status(today)
+            fitness_data.training_status = self.get_training_status(week_ago)
 
         def update_goals():
             fitness_data.goals = self.get_goals("active")
