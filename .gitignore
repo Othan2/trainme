@@ -19,3 +19,6 @@ uv.lock
 *.swp
 *.swo
 *~
+
+# Claude TODO list
+TODOS.md
