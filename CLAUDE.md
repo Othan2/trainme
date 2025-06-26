@@ -11,10 +11,12 @@ Keep code files short to limit model token usage.
 
 ### Commands to Run
 
+- **Code formatting**: `npm run prettier`
 - **Linting**: `black src/`
 - **Markdown linting**: `markdownlint *.md`
 - **Type checking**: `mypy src/`
-- **Tests**: Check if there's a test framework in use before running tests
+
+### Testing
 
 ### Project Structure
 
@@ -24,7 +26,7 @@ Keep code files short to limit model token usage.
 
 ### Development Notes
 
-- Always run linting and type checking after making changes
+- ALWAYS run prettier, linting and type checking after making changes
 - Keep functions and files concise
 - Follow existing code patterns and conventions
 - Check for existing libraries before adding new dependencies

@@ -2,7 +2,11 @@
 
 ## Project Vision
 
-A full-fledged Garmin MCP server that enables Claude Desktop to act as an intelligent running coach. Users can request personalized training plans, have Claude analyze their fitness data, generate structured workout plans, and automatically upload them to Garmin Connect with proper scheduling and modification capabilities.
+A full-fledged Garmin MCP server that enables Claude Desktop to act as an
+intelligent running coach. Users can request personalized training plans, have
+Claude analyze their fitness data, generate structured workout plans, and
+automatically upload them to Garmin Connect with proper scheduling and
+modification capabilities.
 
 ## Current State Assessment
 
@@ -105,10 +109,12 @@ A full-fledged Garmin MCP server that enables Claude Desktop to act as an intell
   - Use blank "claude" author with UUID as displayName for identification  
   - Use `trainingPlanId` as version control mechanism for plan modifications
   - Embed metadata in workout descriptions for additional context
-  - **⚠️ WORK IN PROGRESS**: Plan filtering method needs validation with Garmin API
+  - **⚠️ WORK IN PROGRESS**: Plan filtering method needs validation with
+    Garmin API
 
 - **Plan Retrieval and Management**
-  - New Garmin client method to filter workouts by `workoutProvider="Claude"`
+  - New Garmin client method to filter workouts by
+    `workoutProvider="Claude"`
   - Parse existing Claude-created workouts from Garmin Connect
   - Version tracking using `trainingPlanId` increments
   - Orphaned workout detection via provider field matching
@@ -140,7 +146,8 @@ A full-fledged Garmin MCP server that enables Claude Desktop to act as an intell
 ### 3.2 Advanced MCP Tools
 
 - **Plan Generation Tools**
-  - `generate_training_plan(goal, timeline, current_fitness)` - Create personalized plans
+  - `generate_training_plan(goal, timeline, current_fitness)` - Create
+    personalized plans
   - `analyze_fitness_data()` - Comprehensive fitness assessment
   - `recommend_next_workout()` - Dynamic workout suggestions
   - `modify_training_plan(plan_id, changes)` - Update existing plans
@@ -148,7 +155,8 @@ A full-fledged Garmin MCP server that enables Claude Desktop to act as an intell
 - **Progress Tracking Tools**
   - `analyze_workout_completion(workout_id)` - Post-workout analysis
   - `update_plan_based_on_performance(plan_id)` - Adaptive adjustments
-  - `generate_progress_report(timeframe)` - Comprehensive progress analysis
+  - `generate_progress_report(timeframe)` - Comprehensive progress
+    analysis
 
 ### 3.3 Conversational Workflows
 
@@ -370,14 +378,34 @@ A full-fledged Garmin MCP server that enables Claude Desktop to act as an intell
 
 ### Personal Use Risks
 
-- **Over-reliance on automation**: Encourage user understanding of training principles
-- **Garmin API dependency**: Develop graceful handling of service interruptions
+- **Over-reliance on automation**: Encourage user understanding of
+  training principles
+- **Garmin API dependency**: Develop graceful handling of service
+  interruptions
 - **Training load accuracy**: Conservative approach to prevent overtraining
+
+### Garmin Client Model Improvements
+
+- **Pydantic Model Integration**: Ensure Garmin client returns properly
+  typed pydantic models from the models folder
+  - Use Garmin CLI tool (`tools/garmin_cli.py`) to examine JSON responses
+    from Garmin API endpoints
+  - Create corresponding pydantic models based on actual API response
+    structure
+  - Update client methods to parse JSON responses into typed model
+    objects
+  - Validate model accuracy against real Garmin Connect data
 
 ### Technical Implementation Risks
 
-- **Workout Provider Filtering**: Need to validate that Garmin API supports reliable filtering by `workoutProvider` field for plan identification
-- **Plan Version Control**: Verify `trainingPlanId` approach works for tracking plan modifications
-- **Author Field Manipulation**: Confirm that setting custom author information doesn't conflict with Garmin's data validation
+- **Workout Provider Filtering**: Need to validate that Garmin API supports
+  reliable filtering by `workoutProvider` field for plan identification
+- **Plan Version Control**: Verify `trainingPlanId` approach works for
+  tracking plan modifications
+- **Author Field Manipulation**: Confirm that setting custom author
+  information doesn't conflict with Garmin's data validation
 
-This roadmap provides a comprehensive path from the current solid foundation to a full-featured local AI running coach that seamlessly integrates with Garmin Connect through Claude Desktop, optimized for personal use without external dependencies.
+This roadmap provides a comprehensive path from the current solid foundation
+to a full-featured local AI running coach that seamlessly integrates with
+Garmin Connect through Claude Desktop, optimized for personal use without
+external dependencies.
