@@ -5,6 +5,7 @@ tools/.server.pid
 
 # Python
 __pycache__/
+.mypy_cache/
 
 # Virtual environments
 .env
@@ -20,5 +21,6 @@ uv.lock
 *.swo
 *~
 
-# Claude TODO list
+# Claude
 TODOS.md
+.claude/
