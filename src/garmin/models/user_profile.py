@@ -89,7 +89,9 @@ class UserData(BaseModel):
     first_day_of_week: FirstDayOfWeek
     vo2_max_running: Optional[float] = None
     vo2_max_cycling: Optional[float] = None
-    lactate_threshold_speed: Optional[float] = Field(default=None, description="Speed in meters per second")
+    lactate_threshold_speed: Optional[float] = Field(
+        default=None, description="Speed in meters per second"
+    )
     lactate_threshold_heart_rate: Optional[int] = None
     dive_number: Optional[int] = None
     intensity_minutes_calc_method: IntensityCalcMethod
@@ -116,7 +118,7 @@ class UserData(BaseModel):
 class UserSleep(BaseModel):
     sleep_time: int = Field(description="Sleep time in seconds from midnight")
     default_sleep_time: bool
-    wake_time: int = Field(description="Wake time in seconds from midnight") 
+    wake_time: int = Field(description="Wake time in seconds from midnight")
     default_wake_time: bool
 
 
@@ -129,47 +131,55 @@ class UserProfile(BaseModel):
 
     def __str__(self) -> str:
         # Calculate age from birth date
-        birth_year = int(self.user_data.birth_date.split('-')[0])
+        birth_year = int(self.user_data.birth_date.split("-")[0])
         current_year = datetime.now().year
         age = current_year - birth_year
-        
+
         # Convert weight and height to readable units
         weight_kg = self.user_data.weight / 1000
         height_cm = self.user_data.height
-        
+
         fitness_data = [
             f"Age: {age}",
             f"Gender: {self.user_data.gender.value}",
             f"Weight: {weight_kg:.1f}kg",
             f"Height: {height_cm:.0f}cm",
             f"Measurement System: {self.user_data.measurement_system.value}",
-            f"First Day of Week: {self.user_data.first_day_of_week.day_name}"
+            f"First Day of Week: {self.user_data.first_day_of_week.day_name}",
         ]
-        
+
         # Add VO2 max data if available
         if self.user_data.vo2_max_running:
-            fitness_data.append(f"VO2 Max Running: {self.user_data.vo2_max_running:.1f}")
+            fitness_data.append(
+                f"VO2 Max Running: {self.user_data.vo2_max_running:.1f}"
+            )
         if self.user_data.vo2_max_cycling:
-            fitness_data.append(f"VO2 Max Cycling: {self.user_data.vo2_max_cycling:.1f}")
-            
+            fitness_data.append(
+                f"VO2 Max Cycling: {self.user_data.vo2_max_cycling:.1f}"
+            )
+
         # Add lactate threshold data if available
         if self.user_data.lactate_threshold_speed:
             lt_speed_kmh = self.user_data.lactate_threshold_speed * 3.6
             fitness_data.append(f"LT Speed: {lt_speed_kmh:.1f}km/h")
         if self.user_data.lactate_threshold_heart_rate:
-            fitness_data.append(f"LT Heart Rate: {self.user_data.lactate_threshold_heart_rate}bpm")
-            
+            fitness_data.append(
+                f"LT Heart Rate: {self.user_data.lactate_threshold_heart_rate}bpm"
+            )
+
         # Add activity level if available
         if self.user_data.activity_level:
             fitness_data.append(f"Activity Level: {self.user_data.activity_level}")
-            
+
         # Add training availability
         training_days = [day.value for day in self.user_data.available_training_days]
         long_days = [day.value for day in self.user_data.preferred_long_training_days]
-        
+
         if training_days:
             fitness_data.append(f"Available Training Days: {', '.join(training_days)}")
         if long_days:
             fitness_data.append(f"Preferred Long Training Days: {', '.join(long_days)}")
-            
-        return "User Fitness Profile:\n" + "\n".join([f"  {data}" for data in fitness_data])
+
+        return "User Fitness Profile:\n" + "\n".join(
+            [f"  {data}" for data in fitness_data]
+        )

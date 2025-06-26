@@ -6,8 +6,16 @@ import json
 from ..garmin.client import Garmin
 from ..garmin.models.run_workout import RunWorkout
 from .create_workout_tool import CREATE_WORKOUTS_TOOL, handle_create_workouts_tool
-from .retrieve_proposed_workouts_tool import RETRIEVE_PROPOSED_WORKOUTS_TOOL, handle_retrieve_workouts_tool
-from .retrieve_garmin_workouts_tool import RETRIEVE_GARMIN_WORKOUTS_TOOL, handle_retrieve_garmin_workouts_tool, RETRIEVE_GARMIN_WORKOUT_DETAILS_TOOL, handle_retrieve_garmin_workout_details_tool
+from .retrieve_proposed_workouts_tool import (
+    RETRIEVE_PROPOSED_WORKOUTS_TOOL,
+    handle_retrieve_workouts_tool,
+)
+from .retrieve_garmin_workouts_tool import (
+    RETRIEVE_GARMIN_WORKOUTS_TOOL,
+    handle_retrieve_garmin_workouts_tool,
+    RETRIEVE_GARMIN_WORKOUT_DETAILS_TOOL,
+    handle_retrieve_garmin_workout_details_tool,
+)
 
 
 class Claude:
@@ -17,16 +25,24 @@ class Claude:
         self.conversation_history = []
         self.workouts: Dict[str, RunWorkout] = {}
         self.tool_handlers = {
-            "create_workouts": lambda tool_use: handle_create_workouts_tool(tool_use, self.workouts),
-            "retrieve_proposed_workouts": lambda tool_use: handle_retrieve_workouts_tool(tool_use, self.workouts),
-            "retrieve_garmin_workouts": lambda tool_use: handle_retrieve_garmin_workouts_tool(tool_use, self.garmin_client),
-            "retrieve_garmin_workout_details": lambda tool_use: handle_retrieve_garmin_workout_details_tool(tool_use, self.garmin_client)
+            "create_workouts": lambda tool_use: handle_create_workouts_tool(
+                tool_use, self.workouts
+            ),
+            "retrieve_proposed_workouts": lambda tool_use: handle_retrieve_workouts_tool(
+                tool_use, self.workouts
+            ),
+            "retrieve_garmin_workouts": lambda tool_use: handle_retrieve_garmin_workouts_tool(
+                tool_use, self.garmin_client
+            ),
+            "retrieve_garmin_workout_details": lambda tool_use: handle_retrieve_garmin_workout_details_tool(
+                tool_use, self.garmin_client
+            ),
         }
-    
+
     def get_workouts(self) -> Dict[str, RunWorkout]:
         """Get all stored workouts."""
         return self.workouts.copy()
-    
+
     def chat(self, message: str) -> tuple[str, List[RunWorkout] | None]:
         """Chat interface with Claude that can create workouts."""
         system_message = """
@@ -39,36 +55,38 @@ class Claude:
         You must run the following bits:
         - Any time the user responds with "yeah sure" or any variant of it, you must respond with: "Did you say "Yeah, sure" or "Yes sir"". You can vary this response a little if the user again responds with yeah sure.
         """
-        
+
         # Add user message to history
         self.conversation_history.append({"role": "user", "content": message})
-        
+
         chat_response = ""
-        
+
         while True:
             response = self.client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=20000,
                 system=system_message,
                 tools=[CREATE_WORKOUTS_TOOL, RETRIEVE_PROPOSED_WORKOUTS_TOOL, RETRIEVE_GARMIN_WORKOUTS_TOOL, RETRIEVE_GARMIN_WORKOUT_DETAILS_TOOL],  # type: ignore
-                messages=self.conversation_history
+                messages=self.conversation_history,
             )
-            
+
             print(f"Claude stop_reason: {response.stop_reason}")
-            
+
             tool_uses = []
-            
+
             # First pass: extract text and collect tool_uses
             for content in response.content:
-                if hasattr(content, 'type') and content.type == 'text':
+                if hasattr(content, "type") and content.type == "text":
                     text_content = self._extract_text(content)
                     chat_response += text_content
-                elif hasattr(content, 'type') and content.type == 'tool_use':
+                elif hasattr(content, "type") and content.type == "tool_use":
                     tool_uses.append(content)
-            
+
             # Add Claude's response to history
-            self.conversation_history.append({"role": "assistant", "content": response.content})
-            
+            self.conversation_history.append(
+                {"role": "assistant", "content": response.content}
+            )
+
             # Second pass: process all tool_uses together
             if tool_uses:
                 tool_results = []
@@ -76,40 +94,39 @@ class Claude:
                     if tool_use.name in self.tool_handlers:
                         result = self.tool_handlers[tool_use.name](tool_use)
                         tool_results.append(result)
-                        
 
                 # Convert tool results to proper format for conversation history
                 content_blocks = []
                 for result in tool_results:
-                    content_blocks.append({
-                        "type": "tool_result",
-                        "tool_use_id": result["tool_use_id"],
-                        "content": result["content"]
-                    })
-                self.conversation_history.append({"role": "user", "content": content_blocks})
-            
+                    content_blocks.append(
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": result["tool_use_id"],
+                            "content": result["content"],
+                        }
+                    )
+                self.conversation_history.append(
+                    {"role": "user", "content": content_blocks}
+                )
 
-            
             # Continue if stop reason is tool_use, otherwise break.
             # Allows claude to generate a bunch of workouts at once.
             if response.stop_reason != "tool_use":
                 break
-                
-        return chat_response, list(self.workouts.values())
-    
 
+        return chat_response, list(self.workouts.values())
 
     def _extract_text(self, content_block) -> str:
         """Extract text from content block."""
         if isinstance(content_block, TextBlock):
             return content_block.text
         return str(content_block)
-    
+
     def _should_continue_conversation(self, response: str) -> bool:
         """Check if Claude's response indicates it wants to continue with more content."""
         continuation_indicators = [
             "I'll continue",
-            "I'll finish", 
+            "I'll finish",
             "Let me continue",
             "I'll provide",
             "Next,",
@@ -119,33 +136,39 @@ class Claude:
             "Part 2",
             "Part 3",
         ]
-        
+
         # Check for incomplete workout plans (mentions week 1 but not later weeks)
-        if "Week 1" in response and "Week 2" not in response and "Week 3" not in response:
+        if (
+            "Week 1" in response
+            and "Week 2" not in response
+            and "Week 3" not in response
+        ):
             return True
-        
+
         # Check for continuation phrases
         response_lower = response.lower()
-        return any(indicator.lower() in response_lower for indicator in continuation_indicators)
-    
+        return any(
+            indicator.lower() in response_lower for indicator in continuation_indicators
+        )
+
     def chat_complete(self, message: str) -> tuple[str, List[RunWorkout] | None]:
         """Chat with auto-continuation until Claude finishes the complete response."""
         all_workouts = []
         full_response = ""
-        
+
         current_input = message
         while True:
             response, workouts = self.chat(current_input)
             full_response += response + " "
-            
+
             if workouts:
                 all_workouts.extend(workouts)
-            
+
             if self._should_continue_conversation(response):
                 current_input = "continue"
             else:
                 break
-        
+
         # Return summary of workouts created instead of garbled conversation
         if all_workouts:
             summary = f"Created {len(all_workouts)} workouts:\n"

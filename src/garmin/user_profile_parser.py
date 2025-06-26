@@ -123,7 +123,9 @@ class UserProfileParser:
             vo2_max_running=user_data_json.get("vo2MaxRunning"),
             vo2_max_cycling=user_data_json.get("vo2MaxCycling"),
             lactate_threshold_speed=user_data_json.get("lactateThresholdSpeed"),
-            lactate_threshold_heart_rate=user_data_json.get("lactateThresholdHeartRate"),
+            lactate_threshold_heart_rate=user_data_json.get(
+                "lactateThresholdHeartRate"
+            ),
             dive_number=user_data_json.get("diveNumber"),
             intensity_minutes_calc_method=intensity_calc_method,
             moderate_intensity_minutes_hr_zone=user_data_json.get(

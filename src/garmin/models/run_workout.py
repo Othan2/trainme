@@ -2,8 +2,8 @@ from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 from .workout import (
     WorkoutDetail,
-    SportType, 
-    WorkoutSegment, 
+    SportType,
+    WorkoutSegment,
     EstimatedDistanceUnit,
 )
 
@@ -24,5 +24,5 @@ class RunWorkout(WorkoutDetail):
             "estimatedDurationInSecs": 0,
             "estimatedDistanceInMeters": 0,
             "estimateType": None,
-            "isWheelchair": self.is_wheelchair
+            "isWheelchair": self.is_wheelchair,
         }

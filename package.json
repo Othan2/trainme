@@ -1,0 +1,13 @@
+{
+  "name": "trainme",
+  "version": "1.0.0",
+  "description": "Running training app with Claude integration",
+  "scripts": {
+    "prettier": "prettier --write .",
+    "prettier:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0",
+    "@prettier/plugin-python": "^0.4.0"
+  }
+}
