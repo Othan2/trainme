@@ -135,7 +135,7 @@ def main():
 
             while True:
                 try:
-                    user_input = input("garmin> ").strip()
+                    user_input = input("\033[32mgarmin\033[0m> ").strip()
 
                     if user_input.lower() in ["quit", "exit"]:
                         break
