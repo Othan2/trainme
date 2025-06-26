@@ -64,7 +64,12 @@ def get_user_profile() -> dict:
 
 @mcp.tool
 def create_workout(w: WorkoutDetailType) -> str:
-    return str(w)
+    try:
+        garmin_client = Garmin.get_instance()
+        response = garmin_client.upload_workout(w)
+        return f"Workout '{w.workout_name}' uploaded successfully to Garmin Connect. Response: {response.status_code}"
+    except Exception as e:
+        return f"Failed to upload workout '{w.workout_name}' to Garmin Connect: {str(e)}"
 
 
 if __name__ == "__main__":
