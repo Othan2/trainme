@@ -376,12 +376,12 @@ class TrainingStatusData(BaseModel):
         """Human-readable summary of training status"""
         if not self.training_status:
             return "No training status data available"
-        
+
         lines = [f"Training Status: {self.training_status}"]
-        
+
         if self.training_load_balance:
             lines.append(f"Load Balance: {self.training_load_balance}")
-        
+
         # Training loads
         # load_info = []
         # if self.acute_load is not None:
@@ -390,52 +390,66 @@ class TrainingStatusData(BaseModel):
         #     load_info.append(f"Chronic (28d): {self.chronic_load:.1f}min")
         # if self.current_training_load is not None:
         #     load_info.append(f"Current: {self.current_training_load:.1f}min")
-        
+
         # if load_info:
         #     lines.append(f"Training Load - {', '.join(load_info)}")
-        
+
         # if self.training_stress_balance is not None:
         #     lines.append(f"Training Stress Balance: {self.training_stress_balance:.1f}")
-        
+
         # if self.optimal_training_load:
         #     lines.append(f"Optimal Load Range: {self.optimal_training_load}")
-        
+
         # Start with pipe-separated main info
         result = " | ".join(lines)
-        
+
         # Add monthly loads and targets on new lines
         monthly_lines = []
-        
+
         # Monthly loads
         monthly_loads = []
         if self.monthly_load_aerobic_low is not None:
             monthly_loads.append(f"Aerobic Low: {self.monthly_load_aerobic_low:.1f}min")
         if self.monthly_load_aerobic_high is not None:
-            monthly_loads.append(f"Aerobic High: {self.monthly_load_aerobic_high:.1f}min")
+            monthly_loads.append(
+                f"Aerobic High: {self.monthly_load_aerobic_high:.1f}min"
+            )
         if self.monthly_load_anaerobic is not None:
             monthly_loads.append(f"Anaerobic: {self.monthly_load_anaerobic:.1f}min")
-        
+
         if monthly_loads:
             monthly_lines.append(f"Monthly Loads: {', '.join(monthly_loads)}")
-        
+
         # Monthly targets
         target_ranges = []
-        if (self.monthly_load_aerobic_low_target_min is not None and 
-            self.monthly_load_aerobic_low_target_max is not None):
-            target_ranges.append(f"Aerobic Low: {self.monthly_load_aerobic_low_target_min}-{self.monthly_load_aerobic_low_target_max}min")
-        if (self.monthly_load_aerobic_high_target_min is not None and 
-            self.monthly_load_aerobic_high_target_max is not None):
-            target_ranges.append(f"Aerobic High: {self.monthly_load_aerobic_high_target_min}-{self.monthly_load_aerobic_high_target_max}min")
-        if (self.monthly_load_anaerobic_target_min is not None and 
-            self.monthly_load_anaerobic_target_max is not None):
-            target_ranges.append(f"Anaerobic: {self.monthly_load_anaerobic_target_min}-{self.monthly_load_anaerobic_target_max}min")
-        
+        if (
+            self.monthly_load_aerobic_low_target_min is not None
+            and self.monthly_load_aerobic_low_target_max is not None
+        ):
+            target_ranges.append(
+                f"Aerobic Low: {self.monthly_load_aerobic_low_target_min}-{self.monthly_load_aerobic_low_target_max}min"
+            )
+        if (
+            self.monthly_load_aerobic_high_target_min is not None
+            and self.monthly_load_aerobic_high_target_max is not None
+        ):
+            target_ranges.append(
+                f"Aerobic High: {self.monthly_load_aerobic_high_target_min}-{self.monthly_load_aerobic_high_target_max}min"
+            )
+        if (
+            self.monthly_load_anaerobic_target_min is not None
+            and self.monthly_load_anaerobic_target_max is not None
+        ):
+            target_ranges.append(
+                f"Anaerobic: {self.monthly_load_anaerobic_target_min}-{self.monthly_load_anaerobic_target_max}min"
+            )
+
         if target_ranges:
             monthly_lines.append(f"Monthly Targets: {', '.join(target_ranges)}")
-        
+
         if monthly_lines:
             result += "\n" + "\n".join(monthly_lines)
-        
+
         return result
 
 
@@ -562,7 +576,7 @@ class UserFitnessData(BaseModel):
             lines.append(f"  VO2 Max Running: {self.max_metrics.vo2_max_value}")
         if self.training_status.training_status:
             lines.append(f"  Training Status: {self.training_status}")
-        
+
         # Add race predictions
         race_times = []
         if self.race_predictions.time_5k_seconds:
@@ -572,16 +586,18 @@ class UserFitnessData(BaseModel):
             minutes, seconds = divmod(self.race_predictions.time_10k_seconds, 60)
             race_times.append(f"10K: {minutes}:{seconds:02d}")
         if self.race_predictions.time_half_marathon_seconds:
-            hours, remainder = divmod(self.race_predictions.time_half_marathon_seconds, 3600)
+            hours, remainder = divmod(
+                self.race_predictions.time_half_marathon_seconds, 3600
+            )
             minutes, seconds = divmod(remainder, 60)
             race_times.append(f"Half: {hours}:{minutes:02d}:{seconds:02d}")
         if self.race_predictions.time_marathon_seconds:
             hours, remainder = divmod(self.race_predictions.time_marathon_seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
             race_times.append(f"Marathon: {hours}:{minutes:02d}:{seconds:02d}")
-        
+
         if race_times:
-            lines.append("  Race Predictions:\n    " + '\n    '.join(race_times))
+            lines.append("  Race Predictions:\n    " + "\n    ".join(race_times))
 
         lines.extend(
             [
