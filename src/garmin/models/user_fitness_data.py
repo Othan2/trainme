@@ -400,7 +400,43 @@ class TrainingStatusData(BaseModel):
         # if self.optimal_training_load:
         #     lines.append(f"Optimal Load Range: {self.optimal_training_load}")
         
-        return " | ".join(lines)
+        # Start with pipe-separated main info
+        result = " | ".join(lines)
+        
+        # Add monthly loads and targets on new lines
+        monthly_lines = []
+        
+        # Monthly loads
+        monthly_loads = []
+        if self.monthly_load_aerobic_low is not None:
+            monthly_loads.append(f"Aerobic Low: {self.monthly_load_aerobic_low:.1f}min")
+        if self.monthly_load_aerobic_high is not None:
+            monthly_loads.append(f"Aerobic High: {self.monthly_load_aerobic_high:.1f}min")
+        if self.monthly_load_anaerobic is not None:
+            monthly_loads.append(f"Anaerobic: {self.monthly_load_anaerobic:.1f}min")
+        
+        if monthly_loads:
+            monthly_lines.append(f"Monthly Loads: {', '.join(monthly_loads)}")
+        
+        # Monthly targets
+        target_ranges = []
+        if (self.monthly_load_aerobic_low_target_min is not None and 
+            self.monthly_load_aerobic_low_target_max is not None):
+            target_ranges.append(f"Aerobic Low: {self.monthly_load_aerobic_low_target_min}-{self.monthly_load_aerobic_low_target_max}min")
+        if (self.monthly_load_aerobic_high_target_min is not None and 
+            self.monthly_load_aerobic_high_target_max is not None):
+            target_ranges.append(f"Aerobic High: {self.monthly_load_aerobic_high_target_min}-{self.monthly_load_aerobic_high_target_max}min")
+        if (self.monthly_load_anaerobic_target_min is not None and 
+            self.monthly_load_anaerobic_target_max is not None):
+            target_ranges.append(f"Anaerobic: {self.monthly_load_anaerobic_target_min}-{self.monthly_load_anaerobic_target_max}min")
+        
+        if target_ranges:
+            monthly_lines.append(f"Monthly Targets: {', '.join(target_ranges)}")
+        
+        if monthly_lines:
+            result += "\n" + "\n".join(monthly_lines)
+        
+        return result
 
 
 class GoalsData(BaseModel):
