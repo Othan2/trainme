@@ -23,3 +23,13 @@ trainme = "src.trainme_cli:cli"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["src*"]
+
+[tool.pylsp-mypy]
+enabled = true
+live_mode = true
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

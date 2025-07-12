@@ -1,16 +1,11 @@
-from typing import Optional
 from fastmcp import FastMCP
-from functools import wraps
 import os
-import sys
-from pathlib import Path
-import garth
 from datetime import datetime
 
 from garmin.client import Garmin
-from src.garmin.models.workout import WorkoutDetailType
+from garmin.models.workout import WorkoutDetailType
 
-mcp = FastMCP(
+mcp: FastMCP = FastMCP(
     name="Garmin Connect Server",
     instructions="""
                  This server provides an integration with Garmin Connect.
@@ -42,12 +37,12 @@ with open("tokenstore", "w") as f:
 
 
 @mcp.resource(
-    uri="data://activities/{activityType}",
+    uri="data://activities",
     description="Get activities from Garmin Connect as a resource.",
     mime_type="application/json",  # Explicit MIME type
 )
 def get_activities(
-    start: int = 0, limit: int = 10, activityType: Optional[str] = None
+    start: int = 0, limit: int = 10, activityType: str = "running"
 ) -> list[dict]:
     return Garmin.get_instance().get_activities(
         start=start, limit=limit, activitytype=activityType
@@ -60,8 +55,20 @@ def get_activities(
     mime_type="application/json",
 )
 def get_user_profile() -> dict:
-    profile = Garmin.get_instance().get_user_profile()
-    return profile.model_dump()
+    import sys
+    print("DEBUG: Starting get_user_profile...", file=sys.stderr)
+    try:
+        print("Getting Garmin instance...", file=sys.stderr)
+        garmin_instance = Garmin.get_instance()
+        print("Calling get_user_profile...", file=sys.stderr)
+        profile = garmin_instance.get_user_profile()
+        print("Converting to dict...", file=sys.stderr)
+        result = profile.model_dump()
+        print("Returning result", file=sys.stderr)
+        return result
+    except Exception as e:
+        print(f"Error in get_user_profile: {e}", file=sys.stderr)
+        raise
 
 
 @mcp.resource(
