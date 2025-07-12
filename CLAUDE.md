@@ -16,7 +16,16 @@ Keep code files short to limit model token usage.
 - **Markdown linting**: `markdownlint *.md`
 - **Type checking**: `mypy src/`
 
+### Debugging
+
+Logs for the MCP server started can be found under `/Users/owenboyd/Library/Logs/Claude/mcp-server-mcp_server.log`. Only look at the last 500 lines initially.
+
 ### Testing
+
+For each code change made:
+
+1. Ensure the MCP server starts
+2. Ensure that there are no errors in MCP server logs
 
 ### Project Structure
 
@@ -30,6 +39,8 @@ Keep code files short to limit model token usage.
 - Keep functions and files concise
 - Follow existing code patterns and conventions
 - Check for existing libraries before adding new dependencies
+- If I reject several commands in a row, or ask you to look at chat logs, ALWAYS
+  read .claude/logs/index.md for information on our prior chats.
 
 ### Key Files
 
