@@ -1,39 +1,47 @@
-# trainme (WIP)
+# Trainme
 
-Conversational running trainer that syncs back to garmin.
+Create workout plans with Claude and upload them to Garmin. Requires Claude
+desktop, and integrates directly.
 
-## quickstart
+## Quickstart
 
-### setup
+### Add your garmin info to .env
 
 ```shell
-# requires python >= 3.10
+# requires python >= 3.11.5
 uv sync
 
 # setup env
-cp .env.example .env
+cp .env.example tools/.env
 
 # add your information
-vim .env
+vim tools/.env
 # or
-nano .env
+nano tools/.env
 ```
 
-### Run
+### Tell claude how to start MCP server
 
-```shell
-uv run python .
+Add the following to `/Users/owenboyd/Library/Application Support/Claude/claude_desktop_config.json`
+
+(Replace the `command` path below with the path on your computer to `tools/watch_and_restart.sh`)
+
+```json
+{
+  "mcpServers": {
+    "garmin_mcp": {
+      "command": "/Users/owenboyd/projects/trainme/tools/watch_and_restart.sh"
+    }
+  }
+}
 ```
 
-## TODOs
+### Create a plan through Claude
 
-- Better feedback loop to claude to ensure it does what you ask (creates 5 week plan when not asked, not 3 week plan)
-- Confirmation of plan and upload activities to Garmin
-- Better plan generation - some of the workouts created do not look good
-- Plan modification in response to feedback.
-- Adding length to the plan should not create (many) new workouts - should be much the same as the rest of the plan
-- Plan should be an actual week-by-week plan rather than a set of workouts.
-- Pull as much info about user preferences as possible out of Garmin.get_user_profile
+Insert screenshot here.
+
+You can clear out old workouts created by Claude by asking it to delete workouts
+it created in the last hour.
 
 ## Acknowledgements
 
