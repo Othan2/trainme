@@ -52,6 +52,24 @@ pkill -f "fastmcp run" 2>/dev/null || true
 
 source "$SCRIPT_DIR/.env"
 
+# Function to wait for server to be ready
+wait_for_server() {
+    local max_wait=5
+    local count=0
+    while [ $count -lt $max_wait ]; do
+        if [ -f "$PID_FILE" ]; then
+            local pid=$(cat "$PID_FILE")
+            if kill -0 "$pid" 2>/dev/null; then
+                sleep 0.5
+                return 0
+            fi
+        fi
+        sleep 0.5
+        count=$((count + 1))
+    done
+    return 1
+}
+
 # Function to start server
 start_server() {
     if [ -f "$PID_FILE" ]; then
@@ -69,6 +87,9 @@ start_server() {
     
     echo $! > "$PID_FILE"
     log "Server started with PID $!"
+    
+    # Wait for server to be ready before returning
+    wait_for_server
 }
 
 # Start initial server
