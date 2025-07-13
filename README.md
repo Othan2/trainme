@@ -31,7 +31,7 @@ nano tools/.env
 
 ### Tell claude how to start MCP server
 
-Add the following to `/Users/owenboyd/Library/Application Support/Claude/claude_desktop_config.json`
+On Mac, Add the following to `/Users/$USER/Library/Application Support/Claude/claude_desktop_config.json`
 
 (Replace the `command` path below with the path on your computer to `tools/watch_and_restart.sh`)
 
