@@ -8,6 +8,15 @@ desktop, and integrates directly.
 ### Add your garmin info to .env
 
 ```shell
+# Mac:
+brew install uv
+
+# Linux:
+pip install uv
+
+# Windows:
+scoop install uv
+
 # requires python >= 3.11.5
 uv sync
 
