@@ -18,7 +18,7 @@ Keep code files short to limit model token usage.
 
 ### Debugging
 
-Logs for the MCP server started can be found under `/Users/owenboyd/Library/Logs/Claude/mcp-server-mcp_server.log`. Only look at the last 500 lines initially.
+Logs for the MCP server started can be found under `/Users/owenboyd/Library/Logs/Claude/mcp-server-mcp_server.log`. Only look at the last 500 lines initially. ALWAYS read from the bottom up. The last logs in log files have the most recent logs.
 
 ### Testing
 
@@ -26,6 +26,23 @@ For each code change made:
 
 1. Ensure the MCP server starts
 2. Ensure that there are no errors in MCP server logs
+
+#### MCP Server Testing
+
+To test the MCP server locally:
+
+```bash
+# Test Garmin connection and resource methods
+source env.sh && uv run pytest test_mcp_server.py -v -s
+
+# Test MCP server directly (stdio mode)
+source env.sh && uv run fastmcp run src/mcp_server.py
+
+# Test MCP server with HTTP transport for debugging
+source env.sh && uv run fastmcp run src/mcp_server.py -t streamable-http --log-level DEBUG
+```
+
+The test suite verifies that all Garmin resource methods work correctly and complete within 15 seconds (the MCP timeout limit).
 
 ### Project Structure
 
