@@ -1,6 +1,5 @@
 from fastmcp import FastMCP
 import os
-from datetime import datetime
 
 from garmin.client import Garmin
 from garmin.models.workout import WorkoutDetailType
@@ -39,14 +38,12 @@ with open("tokenstore", "w") as f:
 @mcp.resource(
     uri="data://activities",
     description="Get activities from Garmin Connect as a resource.",
-    mime_type="application/json",  # Explicit MIME type
+    mime_type="application/json",
 )
-def get_activities(
-    start: int = 0, limit: int = 10, activityType: str = "running"
-) -> list[dict]:
-    return Garmin.get_instance().get_activities(
-        start=start, limit=limit, activitytype=activityType
-    )
+def get_activities() -> str:
+    return str(Garmin.get_instance().get_activities(
+        start=0, limit=10, activitytype="running"
+    ))
 
 
 @mcp.resource(
@@ -54,21 +51,8 @@ def get_activities(
     description="Get the user profile from Garmin Connect containing personal metrics and settings.",
     mime_type="application/json",
 )
-def get_user_profile() -> dict:
-    import sys
-    print("DEBUG: Starting get_user_profile...", file=sys.stderr)
-    try:
-        print("Getting Garmin instance...", file=sys.stderr)
-        garmin_instance = Garmin.get_instance()
-        print("Calling get_user_profile...", file=sys.stderr)
-        profile = garmin_instance.get_user_profile()
-        print("Converting to dict...", file=sys.stderr)
-        result = profile.model_dump()
-        print("Returning result", file=sys.stderr)
-        return result
-    except Exception as e:
-        print(f"Error in get_user_profile: {e}", file=sys.stderr)
-        raise
+def get_user_profile() -> str:
+    return str(Garmin.get_instance().get_user_profile())
 
 
 @mcp.resource(
@@ -76,7 +60,7 @@ def get_user_profile() -> dict:
     description="Get comprehensive user fitness data including profile, recent activities, fitness metrics, recovery data, and training goals - optimized for training plan generation.",
     mime_type="application/json",
 )
-def get_user_fitness_data(limit_activities: int = 15) -> dict:
+def get_user_fitness_data() -> str:
     """
     Retrieve comprehensive fitness data that consolidates all user information
     needed for training plan generation in a single API call.
@@ -94,29 +78,9 @@ def get_user_fitness_data(limit_activities: int = 15) -> dict:
         limit_activities: Number of recent activities to include (default: 15)
 
     Returns:
-        dict: Comprehensive fitness data in unified format
+        str: Comprehensive fitness data in unified format
     """
-    try:
-        garmin_client = Garmin.get_instance()
-        fitness_data = garmin_client.get_comprehensive_fitness_data(
-            limit_activities=limit_activities
-        )
-        return fitness_data.to_dict()
-    except Exception as e:
-        # Return error information in a structured format
-        return {
-            "error": "Failed to retrieve comprehensive fitness data",
-            "details": str(e),
-            "generatedAt": datetime.now().isoformat(),
-            "userProfile": None,
-            "fitnessMetrics": None,
-            "trainingLoad": None,
-            "recoveryMetrics": None,
-            "recentActivities": [],
-            "activeGoals": [],
-            "trainingAvailability": None,
-            "notes": f"Error occurred during data aggregation: {str(e)}",
-        }
+    return str(Garmin.get_instance().get_comprehensive_fitness_data(limit_activities=15))
 
 
 @mcp.tool
