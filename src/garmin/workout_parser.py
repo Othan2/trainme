@@ -156,7 +156,7 @@ class WorkoutParser:
             workout_name=workout_name,
             workout_segments=workout_segments,
             training_plan_id=training_plan_id,
-            scheduled_date=None
+            scheduled_date=None,
         )
 
     @staticmethod

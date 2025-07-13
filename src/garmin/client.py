@@ -10,7 +10,12 @@ from typing import Any, Dict, List, Optional
 import garth
 from .fit import FitEncoderWeight
 
-from .models.workout import WorkoutDetail, Author, WorkoutOverview, CLAUDE_WORKOUT_SOURCE_ID
+from .models.workout import (
+    WorkoutDetail,
+    Author,
+    WorkoutOverview,
+    CLAUDE_WORKOUT_SOURCE_ID,
+)
 from .workout_parser import WorkoutParser
 from .models.user_profile import UserProfile
 from .user_profile_parser import UserProfileParser
@@ -1504,12 +1509,21 @@ class Garmin:
             for workout_data in response
         ]
 
-    def get_workouts_by_source(self, source_id: str = CLAUDE_WORKOUT_SOURCE_ID, start=0, end=100) -> List[WorkoutOverview]:
+    def get_workouts_by_source(
+        self, source_id: str = CLAUDE_WORKOUT_SOURCE_ID, start=0, end=100
+    ) -> List[WorkoutOverview]:
         """Return workouts from a specific provider ID."""
-        
+
         url = f"{self.garmin_workouts}/workouts"
-        logger.debug(f"Requesting workouts from source {source_id}, range {start}-{end}")
-        params = {"start": start, "limit": end, "myWorkoutsOnly": False, "sharedWorkoutsOnly": False}
+        logger.debug(
+            f"Requesting workouts from source {source_id}, range {start}-{end}"
+        )
+        params = {
+            "start": start,
+            "limit": end,
+            "myWorkoutsOnly": False,
+            "sharedWorkoutsOnly": False,
+        }
         response = self.connectapi(url, params=params)
         logger.debug(f"Workouts response: {response}")
 
@@ -1523,10 +1537,7 @@ class Garmin:
             for workout_data in response
         ]
         # Filter workouts by provider ID
-        filtered_workouts = [
-            w for w in workouts 
-            if w.workout_source_id == source_id
-        ]
+        filtered_workouts = [w for w in workouts if w.workout_source_id == source_id]
 
         return filtered_workouts
 
@@ -1547,17 +1558,26 @@ class Garmin:
 
         return self.download(url)
 
-    def upload_workout(self, workout: WorkoutDetail):
+    def create_workout(self, workout: WorkoutDetail):
         """Upload workout using json data."""
         workout.workout_source_id = CLAUDE_WORKOUT_SOURCE_ID
-        workout.author = Author(display_name = "Claude MCP")
+        workout.author = Author(display_name="Claude MCP")
 
         url = f"{self.garmin_workouts}/workout"
         logger.debug("Uploading workout using %s", url)
 
         return self.garth.post("connectapi", url, json=workout.to_dict(), api=True)
 
-    def schedule_workout(self, workout_id: str, workout: WorkoutDetail) -> WorkoutDetail:
+    def update_workout(self, workout_id: str, workout: WorkoutDetail):
+        """Update an existing workout using json data."""
+        url = f"{self.garmin_workouts}/workout/{workout_id}"
+        logger.debug("Updating workout %s using %s", workout_id, url)
+
+        return self.garth.put("connectapi", url, json=workout.to_dict(), api=True)
+
+    def schedule_workout(
+        self, workout_id: str, workout: WorkoutDetail
+    ) -> WorkoutDetail:
         """Schedule a workout for a specific date."""
         url = f"{self.garmin_workouts}/schedule/{workout_id}"
         if workout.scheduled_date is None:
@@ -1566,7 +1586,9 @@ class Garmin:
         payload = {"date": date_str}
         logger.debug("Scheduling workout %s for date %s", workout_id, date_str)
 
-        return WorkoutParser.parse_workout(self.garth.post("connectapi", url, json=payload, api=True).json())
+        return WorkoutParser.parse_workout(
+            self.garth.post("connectapi", url, json=payload, api=True).json()
+        )
 
     def delete_workout(self, workout_id: str):
         """Delete workout by id."""
@@ -1576,7 +1598,7 @@ class Garmin:
 
         return self.garth.request(
             "POST",
-            "connectapi", 
+            "connectapi",
             url,
             headers={"x-http-method-override": "DELETE"},
             api=True,

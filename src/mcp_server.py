@@ -89,6 +89,7 @@ def user_fitness_data() -> str:
 def create_workouts(workouts: list[WorkoutDetailType]) -> str:
     """
     Upload multiple workouts to Garmin Connect. Also schedules them in user calendar.
+    Returns summary and workout IDs for successfully created workouts.
     ALWAYS choose interval step types for the main "running" step type.
     ALWAYS prefer heartrate zones over pace zones unless explicitly provided pace.
     ALWAYS base long run duration on user's easy run pace.
@@ -104,9 +105,9 @@ def create_workouts(workouts: list[WorkoutDetailType]) -> str:
     failed = 0
     scheduled = 0
 
-    for workout in workouts:
+    for i, workout in enumerate(workouts):
         try:
-            response = garmin_client.upload_workout(workout)
+            response = garmin_client.create_workout(workout)
             workout_id = response.json().get("workoutId")
             successful += 1
 
@@ -118,11 +119,13 @@ def create_workouts(workouts: list[WorkoutDetailType]) -> str:
                     else "unscheduled"
                 )
                 results.append(
-                    f"✓ '{workout.workout_name}' uploaded and scheduled for {date_str}"
+                    f"✓ '{workout.workout_name}' uploaded and scheduled for {date_str} (ID: {workout_id})"
                 )
                 scheduled += 1
             else:
-                results.append(f"✓ '{workout.workout_name}' uploaded successfully")
+                results.append(
+                    f"✓ '{workout.workout_name}' uploaded successfully (no ID returned)"
+                )
 
         except Exception as e:
             results.append(f"✗ '{workout.workout_name}' failed: {str(e)}")
@@ -131,6 +134,43 @@ def create_workouts(workouts: list[WorkoutDetailType]) -> str:
     summary = f"Uploaded {successful} of {len(workouts)} workouts successfully"
     if scheduled > 0:
         summary += f" ({scheduled} scheduled)"
+    if failed > 0:
+        summary += f" ({failed} failed)"
+
+    return f"{summary}\n\n" + "\n".join(results)
+
+
+@mcp.tool
+def update_workouts(workouts: list[tuple[int, WorkoutDetailType]]) -> str:
+    """
+    Update multiple existing workouts in Garmin Connect.
+    Takes a list of tuples where each tuple contains (workout_id, workout_detail).
+
+    Args:
+        workouts: List of tuples containing (workout_id, workout_detail) pairs
+
+    Returns:
+        Summary of update results
+    """
+    garmin_client = Garmin.get_instance()
+    results = []
+    successful = 0
+    failed = 0
+
+    for workout_id, workout in workouts:
+        try:
+            garmin_client.update_workout(str(workout_id), workout)
+            successful += 1
+            results.append(
+                f"✓ Workout {workout_id} ('{workout.workout_name}') updated successfully"
+            )
+        except Exception as e:
+            failed += 1
+            results.append(
+                f"✗ Workout {workout_id} ('{workout.workout_name}') failed: {str(e)}"
+            )
+
+    summary = f"Updated {successful} of {len(workouts)} workouts successfully"
     if failed > 0:
         summary += f" ({failed} failed)"
 

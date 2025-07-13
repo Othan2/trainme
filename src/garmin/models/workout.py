@@ -369,8 +369,7 @@ class WorkoutDetail(ABC, BaseModel):
         description="Unique id for source of the training plan.",
     )
     scheduled_date: Optional[datetime] = Field(
-        default=None,
-        description="Date (year, month and day) to schedule the workout."
+        default=None, description="Date (year, month and day) to schedule the workout."
     )
     training_plan_id: Optional[str] = Field(
         default=None,
