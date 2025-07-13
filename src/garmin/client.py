@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 import garth
 from .fit import FitEncoderWeight
 
-from .models.workout import WorkoutDetail, WorkoutOverview
+from .models.workout import WorkoutDetail, WorkoutOverview, CLAUDE_WORKOUT_SOURCE_ID
 from .workout_parser import WorkoutParser
 from .models.user_profile import UserProfile
 from .user_profile_parser import UserProfileParser
@@ -1504,6 +1504,32 @@ class Garmin:
             for workout_data in response
         ]
 
+    def get_workouts_by_source(self, source_id: str = CLAUDE_WORKOUT_SOURCE_ID, start=0, end=100) -> List[WorkoutOverview]:
+        """Return workouts from a specific provider ID."""
+        
+        url = f"{self.garmin_workouts}/workouts"
+        logger.debug(f"Requesting workouts from source {source_id}, range {start}-{end}")
+        params = {"start": start, "limit": end, "myWorkoutsOnly": False, "sharedWorkoutsOnly": False}
+        response = self.connectapi(url, params=params)
+        logger.debug(f"Workouts response: {response}")
+
+        if not isinstance(response, list):
+            raise GarminConnectConnectionError(
+                f"Expected list response from {url}, got {type(response)}"
+            )
+
+        workouts = [
+            WorkoutParser.parse_workout_overview(workout_data)
+            for workout_data in response
+        ]
+        # Filter workouts by provider ID
+        filtered_workouts = [
+            w for w in workouts 
+            if w.workout_source_id == source_id
+        ]
+
+        return filtered_workouts
+
     def get_workout_by_id(self, workout_id) -> WorkoutDetail:
         """Return workout by id."""
 
@@ -1523,11 +1549,27 @@ class Garmin:
 
     def upload_workout(self, workout: WorkoutDetail):
         """Upload workout using json data."""
+        workout.workout_source_id = CLAUDE_WORKOUT_SOURCE_ID
+        workout.author.display_name = "Claude MCP"
 
         url = f"{self.garmin_workouts}/workout"
         logger.debug("Uploading workout using %s", url)
 
         return self.garth.post("connectapi", url, json=workout.to_dict(), api=True)
+
+    def delete_workout(self, workout_id: str):
+        """Delete workout by id."""
+
+        url = f"{self.garmin_workouts}/workout/{workout_id}"
+        logger.debug("Deleting workout with id %s", workout_id)
+
+        return self.garth.request(
+            "POST",
+            "connectapi", 
+            url,
+            headers={"x-http-method-override": "DELETE"},
+            api=True,
+        )
 
     def get_menstrual_data_for_date(self, fordate: str):
         """Return menstrual data for date."""
