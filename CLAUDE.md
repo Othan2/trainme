@@ -33,7 +33,7 @@ To test the MCP server locally:
 
 ```bash
 # Test Garmin connection and resource methods
-source env.sh && uv run pytest test_mcp_server.py -v -s
+source env.sh && uv run pytest src/mcp_server_test.py -v -s
 
 # Test MCP server directly (stdio mode)
 source env.sh && uv run fastmcp run src/mcp_server.py
@@ -53,6 +53,7 @@ The test suite verifies that all Garmin resource methods work correctly and comp
 ### Development Notes
 
 - ALWAYS run prettier, linting and type checking after making changes
+- ALWAYS use uv instead of pip. NEVER use pip directly.
 - Keep functions and files concise
 - Follow existing code patterns and conventions
 - Check for existing libraries before adding new dependencies

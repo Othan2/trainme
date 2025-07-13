@@ -7,8 +7,8 @@ Conversational running trainer that syncs back to garmin.
 ### setup
 
 ```shell
-# requires python >= 3.11.5
-pip install -r requirements.txt
+# requires python >= 3.10
+uv sync
 
 # setup env
 cp .env.example .env
@@ -22,7 +22,7 @@ nano .env
 ### Run
 
 ```shell
-python3 .
+uv run python .
 ```
 
 ## TODOs

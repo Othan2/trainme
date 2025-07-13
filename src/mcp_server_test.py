@@ -44,7 +44,7 @@ def garmin_client():
     # Test login
     start_time = time.time()
     print("Attempting login...")
-    client = Garmin(email, password, tokens=tokens)
+    client = Garmin(email or "", password or "", tokens=tokens)
     tokens = client.login()
     login_time = time.time() - start_time
     print(f"Login successful in {login_time:.2f} seconds")
