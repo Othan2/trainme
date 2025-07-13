@@ -6,6 +6,8 @@ from datetime import datetime
 from pydantic import BaseModel, Field, Discriminator, field_validator
 from typing import Annotated
 
+CLAUDE_WORKOUT_SOURCE_ID = "77777777"
+
 
 class SportType(Enum):
     RUNNING = ("running", 1, 1)
@@ -351,7 +353,7 @@ class WorkoutOverview:
     def __str__(self) -> str:
         author_name = self.author.display_name or self.author.full_name or "Unknown"
         provider = f" ({self.workout_provider})" if self.workout_provider else ""
-        return f"{self.workout_name} by {author_name}. Workout provider: {provider}. ID: {self.workout_id}"
+        return f"{self.workout_name} by source {self.workout_source_id}. ID: {self.workout_id}"
 
 
 class WorkoutDetail(ABC, BaseModel):
@@ -362,13 +364,16 @@ class WorkoutDetail(ABC, BaseModel):
     workout_segments: List[WorkoutSegment] = Field(
         description="List of individual workout segments. Each activity type in the workout needs its own segment."
     )
-    workout_source_id: Optional[str] = Field(
-        default=None, description="Unique id for source of the training plan."
+    workout_source_id: str = Field(
+        default=CLAUDE_WORKOUT_SOURCE_ID,
+        description="Unique id for source of the training plan.",
     )
     training_plan_id: Optional[str] = Field(
-        default=None, description="Unique identifier of the training plan."
+        default=None,
+        description="Unique identifier of the training plan. Must not include spaces or spe",
     )
     is_wheelchair: bool = False
+    author: Author
 
     @abstractmethod
     def to_dict(self) -> Dict[str, Any]:

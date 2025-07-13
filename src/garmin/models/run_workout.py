@@ -18,6 +18,10 @@ class RunWorkout(WorkoutDetail):
             "sportType": SportType.RUNNING.to_dict(),
             "subSportType": None,
             "workoutName": self.workout_name,
+            "workoutSourceId": self.workout_source_id,
+            "author": {
+                "displayName": self.author.display_name,
+            },
             "estimatedDistanceUnit": EstimatedDistanceUnit().to_dict(),
             "workoutSegments": [segment.to_dict() for segment in self.workout_segments],
             "avgTrainingSpeed": 0.0,
