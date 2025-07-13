@@ -90,7 +90,7 @@ class UserData(BaseModel):
     vo2_max_running: Optional[float] = None
     vo2_max_cycling: Optional[float] = None
     lactate_threshold_speed: Optional[float] = Field(
-        default=None, description="Speed in meters per second"
+        default=None, description="Speed in meters per 0.1 second"
     )
     lactate_threshold_heart_rate: Optional[int] = None
     dive_number: Optional[int] = None
@@ -160,11 +160,14 @@ class UserProfile(BaseModel):
 
         # Add lactate threshold data if available
         if self.user_data.lactate_threshold_speed:
-            lt_speed_kmh = self.user_data.lactate_threshold_speed * 3.6
-            fitness_data.append(f"LT Speed: {lt_speed_kmh:.1f}km/h")
+            lt_speed_kmh = self.user_data.lactate_threshold_speed * 36
+            lt_pace_min_mile = 60 / (lt_speed_kmh * 0.621371)
+            lt_min = int(lt_pace_min_mile)
+            lt_sec = int((lt_pace_min_mile - lt_min) * 60)
+            fitness_data.append(f"Lactate Threshold Pace: {lt_min}:{lt_sec:02d}/mile")
         if self.user_data.lactate_threshold_heart_rate:
             fitness_data.append(
-                f"LT Heart Rate: {self.user_data.lactate_threshold_heart_rate}bpm"
+                f"Lactate Threshold Heart Rate: {self.user_data.lactate_threshold_heart_rate}bpm"
             )
 
         # Add activity level if available

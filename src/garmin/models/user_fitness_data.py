@@ -417,8 +417,8 @@ class TrainingStatusData(BaseModel):
         if self.monthly_load_anaerobic is not None:
             monthly_loads.append(f"Anaerobic: {self.monthly_load_anaerobic:.1f}min")
 
-        if monthly_loads:
-            monthly_lines.append(f"Monthly Loads: {', '.join(monthly_loads)}")
+        # if monthly_loads:
+        # monthly_lines.append(f"Monthly Loads: {', '.join(monthly_loads)}")
 
         # Monthly targets
         target_ranges = []
@@ -444,8 +444,8 @@ class TrainingStatusData(BaseModel):
                 f"Anaerobic: {self.monthly_load_anaerobic_target_min}-{self.monthly_load_anaerobic_target_max}min"
             )
 
-        if target_ranges:
-            monthly_lines.append(f"Monthly Targets: {', '.join(target_ranges)}")
+        # if target_ranges:
+        #     monthly_lines.append(f"Monthly Targets: {', '.join(target_ranges)}")
 
         if monthly_lines:
             result += "\n" + "\n".join(monthly_lines)
