@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 import garth
 from .fit import FitEncoderWeight
 
-from .models.workout import WorkoutDetail, WorkoutOverview, CLAUDE_WORKOUT_SOURCE_ID
+from .models.workout import WorkoutDetail, Author, WorkoutOverview, CLAUDE_WORKOUT_SOURCE_ID
 from .workout_parser import WorkoutParser
 from .models.user_profile import UserProfile
 from .user_profile_parser import UserProfileParser
@@ -1550,12 +1550,23 @@ class Garmin:
     def upload_workout(self, workout: WorkoutDetail):
         """Upload workout using json data."""
         workout.workout_source_id = CLAUDE_WORKOUT_SOURCE_ID
-        workout.author.display_name = "Claude MCP"
+        workout.author = Author(display_name = "Claude MCP")
 
         url = f"{self.garmin_workouts}/workout"
         logger.debug("Uploading workout using %s", url)
 
         return self.garth.post("connectapi", url, json=workout.to_dict(), api=True)
+
+    def schedule_workout(self, workout_id: str, workout: WorkoutDetail) -> WorkoutDetail:
+        """Schedule a workout for a specific date."""
+        url = f"{self.garmin_workouts}/schedule/{workout_id}"
+        if workout.scheduled_date is None:
+            raise ValueError("Cannot schedule workout without a scheduled_date")
+        date_str = workout.scheduled_date.strftime("%Y-%m-%d")
+        payload = {"date": date_str}
+        logger.debug("Scheduling workout %s for date %s", workout_id, date_str)
+
+        return WorkoutParser.parse_workout(self.garth.post("connectapi", url, json=payload, api=True).json())
 
     def delete_workout(self, workout_id: str):
         """Delete workout by id."""

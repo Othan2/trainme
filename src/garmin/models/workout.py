@@ -195,7 +195,7 @@ class StepType(Enum):
     INTERVAL = ("interval", 3, 3)
     RECOVERY = ("recovery", 4, 4)
     REST = ("rest", 5, 5)
-    OTHER = ("other", 7, 7)
+    # OTHER = ("other", 7, 7)
 
     @classmethod
     def _missing_(cls, value):
@@ -368,12 +368,16 @@ class WorkoutDetail(ABC, BaseModel):
         default=CLAUDE_WORKOUT_SOURCE_ID,
         description="Unique id for source of the training plan.",
     )
+    scheduled_date: Optional[datetime] = Field(
+        default=None,
+        description="Date (year, month and day) to schedule the workout."
+    )
     training_plan_id: Optional[str] = Field(
         default=None,
         description="Unique identifier of the training plan. Must not include spaces or spe",
     )
     is_wheelchair: bool = False
-    author: Author
+    author: Optional[Author] = None
 
     @abstractmethod
     def to_dict(self) -> Dict[str, Any]:

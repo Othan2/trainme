@@ -20,7 +20,7 @@ class RunWorkout(WorkoutDetail):
             "workoutName": self.workout_name,
             "workoutSourceId": self.workout_source_id,
             "author": {
-                "displayName": self.author.display_name,
+                "displayName": self.author.display_name if self.author else None,
             },
             "estimatedDistanceUnit": EstimatedDistanceUnit().to_dict(),
             "workoutSegments": [segment.to_dict() for segment in self.workout_segments],

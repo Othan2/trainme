@@ -33,7 +33,7 @@ class WorkoutParser:
             "interval": StepType.INTERVAL,
             "recovery": StepType.RECOVERY,
             "rest": StepType.REST,
-            "other": StepType.OTHER,
+            # "other": StepType.OTHER,
         }
 
         return step_type_map[key or "other"]
@@ -156,6 +156,7 @@ class WorkoutParser:
             workout_name=workout_name,
             workout_segments=workout_segments,
             training_plan_id=training_plan_id,
+            scheduled_date=None
         )
 
     @staticmethod
