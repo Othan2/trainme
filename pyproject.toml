@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "trainme"
 version = "0.1.0"
 description = "Conversational running trainer that syncs to Garmin Connect"
-requires-python = ">=3.10"
+requires-python = ">=3.11.5"
 dependencies = [
     "pyyaml>=6.0",
     "requests>=2.31.0", 
@@ -30,7 +30,7 @@ enabled = true
 live_mode = true
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11.5"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
